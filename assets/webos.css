@@ -1,0 +1,129 @@
+html[data-platform='webos'] {
+  --font-size-base: 1.25rem;
+  --line-height-base: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.webos-focus-ring {
+  @apply outline-none ring-4 ring-primary ring-offset-2 ring-offset-primary;
+}
+
+.webos-button {
+  @apply px-6 py-3 rounded-lg transition-all duration-200 ease-out;
+  @apply hover:bg-bg-hover;
+  @apply active:scale-95;
+  font-size: 1.125rem;
+}
+
+.webos-card {
+  @apply bg-secondary rounded-xl p-6 transition-all duration-200;
+  @apply hover:bg-bg-hover hover:shadow-xl;
+}
+
+.webos-grid {
+  @apply grid gap-6;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.webos-list-item {
+  @apply flex items-center gap-4 px-4 py-3 rounded-lg;
+  @apply hover:bg-bg-hover transition-colors duration-150;
+  font-size: 1.125rem;
+}
+
+.webos-player-controls {
+  @apply fixed bottom-0 left-0 right-0 p-6;
+  @apply flex items-center justify-center gap-8;
+}
+
+.webos-player-control-btn {
+  @apply w-16 h-16 rounded-full flex items-center justify-center;
+  @apply bg-secondary hover:bg-bg-hover transition-all duration-200;
+  @apply active:scale-90;
+}
+
+.webos-progress-bar {
+  @apply w-full h-2 bg-border rounded-full overflow-hidden cursor-pointer;
+}
+
+.webos-progress-fill {
+  @apply h-full bg-accent rounded-full transition-all duration-100 ease-out;
+}
+
+.webos-sidebar {
+  @apply fixed left-0 top-0 bottom-0 w-72 bg-primary border-r border-border;
+  @apply flex flex-col;
+  z-index: 50;
+}
+
+.webos-modal {
+  @apply fixed inset-0 flex items-center justify-center z-50;
+  @apply bg-black bg-opacity-70;
+}
+
+.webos-modal-content {
+  @apply bg-secondary rounded-2xl p-8 max-w-2xl w-full mx-8 overflow-y-auto;
+  max-height: 80vh;
+}
+
+.webos-text-primary {
+  @apply text-fg text-lg;
+}
+
+.webos-text-secondary {
+  @apply text-fg-muted text-base;
+}
+
+.webos-text-title {
+  @apply text-fg text-2xl font-semibold;
+}
+
+.webos-text-heading {
+  @apply text-fg text-xl font-medium;
+}
+
+.webos-input {
+  @apply w-full px-4 py-3 rounded-lg bg-primary border border-border;
+  @apply focus:border-accent focus:outline-none focus:ring-2;
+  @apply text-fg text-lg;
+}
+
+.webos-safe-area {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.webos-tv-safe-area {
+  @apply px-12 py-8;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+html, body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
