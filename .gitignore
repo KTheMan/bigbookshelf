@@ -1,1 +1,9 @@
-
+node_modules/
+dist/
+ipk/
+.nuxt/
+.output/
+test-results/
+playwright-report/
+*.log
+.DS_Store

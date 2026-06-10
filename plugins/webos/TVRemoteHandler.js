@@ -14,15 +14,31 @@ class TVRemoteHandler {
   }
 
   init() {
-    document.addEventListener('keydown', this.handleKeydown.bind(this))
-    document.addEventListener('keyup', this.handleKeyup.bind(this))
+    this._keydownHandler = this.handleKeydown.bind(this)
+    this._keyupHandler = this.handleKeyup.bind(this)
+    this._focusinHandler = this.handleFocusin.bind(this)
+    document.addEventListener('keydown', this._keydownHandler)
+    document.addEventListener('keyup', this._keyupHandler)
+    document.addEventListener('focusin', this._focusinHandler)
     this.log('Initialized')
   }
 
   destroy() {
-    document.removeEventListener('keydown', this.handleKeydown.bind(this))
-    document.removeEventListener('keyup', this.handleKeyup.bind(this))
+    document.removeEventListener('keydown', this._keydownHandler)
+    document.removeEventListener('keyup', this._keyupHandler)
+    document.removeEventListener('focusin', this._focusinHandler)
     this.handlers.clear()
+  }
+
+  handleFocusin(event) {
+    const el = event.target
+    if (!el || el === this.focusedElement) return
+    // Keep webos-focused in sync with native browser focus
+    el.classList.add('webos-focused')
+    document.querySelectorAll('.webos-focused').forEach((prev) => {
+      if (prev !== el) prev.classList.remove('webos-focused')
+    })
+    this.focusedElement = el
   }
 
   handleKeydown(event) {
@@ -217,9 +233,9 @@ class TVRemoteHandler {
   }
 
   handleBack() {
-    const router = window.__nuxt__?.$router || (document.__vue_app__ && document.__vue_app__.$router)
+    const router = window.$nuxt?.$router
     if (router && window.history.length > 1) {
-      window.history.back()
+      router.back()
     } else {
       this.emitMediaKey('back')
     }
