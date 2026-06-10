@@ -38,8 +38,16 @@
     "eslint-plugin-vue": "^9.0.0",
     "serve": "^14.0.0"
   },
+  "browserslist": [
+    "Samsung >= 3",
+    "Chrome >= 38",
+    "Safari >= 6",
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ],
   "webOS": {
-    "minVersion": "4.0.0",
+    "minVersion": "3.0.0",
     "targetDevice": "tv"
   }
 }

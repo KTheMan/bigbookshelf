@@ -35,6 +35,7 @@ export default {
   css: ['@/assets/tailwind.css', '@/assets/app.css', '@/assets/webos.css'],
 
   plugins: [
+    '@/plugins/webos/polyfills.js',
     '@/plugins/server.js',
     '@/plugins/db.js',
     '@/plugins/localStore.js',
