@@ -1,6 +1,12 @@
 html[data-platform='webos'] {
   --font-size-base: 1.25rem;
   --line-height-base: 1.5;
+  font-size: 20px;
+}
+
+/* TV: scale up base text so it's readable from 10ft */
+html[data-platform='webos'] body {
+  font-size: 1.25rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -126,4 +132,51 @@ html, body {
 input, textarea {
   -webkit-user-select: text;
   user-select: text;
+}
+
+/* ─── TV-specific layout overrides ─────────────────────────────────────────── */
+
+/* Appbar: larger icons and library label text on TV */
+html[data-platform='webos'] #appbar .material-symbols {
+  font-size: 2rem;
+}
+html[data-platform='webos'] #appbar p {
+  font-size: 1rem;
+}
+
+/* Book cards on TV: increase title / author text size */
+html[data-platform='webos'] .bookshelfRow {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* Focused card outline using the accent green */
+html[data-platform='webos'] [tabindex]:focus,
+html[data-platform='webos'] [data-focusable]:focus,
+html[data-platform='webos'] button:focus,
+html[data-platform='webos'] a:focus {
+  outline: 3px solid #1ad691;
+  outline-offset: 2px;
+}
+
+/* Nav bar and toolbar on TV */
+html[data-platform='webos'] .home-bookshelf-nav-bar,
+html[data-platform='webos'] .home-bookshelf-toolbar {
+  font-size: 1.1rem;
+}
+
+/* Item detail page: wider cover on TV */
+html[data-platform='webos'] #item-page {
+  padding: 0 5vw;
+}
+
+/* Progress bar on book cards: taller so it's visible at distance */
+html[data-platform='webos'] .box-shadow-progressbar {
+  height: 6px;
+}
+
+/* Connection indicator and download indicator: larger */
+html[data-platform='webos'] .widgets-connection-indicator span,
+html[data-platform='webos'] .widgets-download-progress-indicator span {
+  font-size: 1.5rem;
 }

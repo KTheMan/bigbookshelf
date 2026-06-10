@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full layout-wrapper bg-bg webos-tv-safe-area">
+  <div class="w-full layout-wrapper bg-bg">
     <app-appbar />
     <div id="content" class="overflow-hidden relative" :class="isPlayerOpen ? 'playerOpen' : ''">
       <Nuxt :key="currentLang" />

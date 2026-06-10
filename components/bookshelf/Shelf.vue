@@ -50,7 +50,7 @@ export default {
       return this.entityHeight + 40
     },
     bookWidth() {
-      var coverSize = 100
+      var coverSize = this.$platform === 'webos' ? 200 : 100
       if (this.isCoverSquareAspectRatio) return coverSize * 1.6
       return coverSize
     },

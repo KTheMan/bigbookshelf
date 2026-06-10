@@ -42,4 +42,15 @@ export default {
   max-height: calc(100% - 36px);
   min-height: calc(100% - 36px);
 }
+
+html[data-platform='webos'] .main-content {
+  height: calc(100% - 96px);
+  max-height: calc(100% - 96px);
+  min-height: calc(100% - 96px);
+}
+html[data-platform='webos'] .main-content.no-toolbar {
+  height: calc(100% - 48px);
+  max-height: calc(100% - 48px);
+  min-height: calc(100% - 48px);
+}
 </style>

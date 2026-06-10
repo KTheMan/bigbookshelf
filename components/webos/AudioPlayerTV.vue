@@ -47,8 +47,8 @@
         <div class="webos-tv-progress-container">
           <span class="webos-tv-time">{{ currentTimePretty }}</span>
           <div class="webos-tv-progress-bar" ref="track" @click="seekToPosition">
-            <div class="webos-tv-progress-buffered" ref="bufferedTrack" />
-            <div class="webos-tv-progress-played" ref="playedTrack" />
+            <div class="webos-tv-progress-buffered" ref="bufferedTrack" :style="{ width: (bufferedTrack * 100) + '%' }" />
+            <div class="webos-tv-progress-played" ref="playedTrack" :style="{ width: (playedTrack * 100) + '%' }" />
           </div>
           <span class="webos-tv-time">{{ timeRemainingPretty }}</span>
         </div>
@@ -99,6 +99,8 @@
 </template>
 
 <script>
+import { getAverageColorFromCoverUrl } from '@/utils/coverAverageColor'
+
 export default {
   props: {
     playbackSession: { type: Object, default: null },
@@ -163,7 +165,11 @@ export default {
     collapseFullscreen() {
       this.showFullscreen = false
     },
-    coverImageLoaded() {},
+    async coverImageLoaded(fullCoverUrl) {
+      if (!fullCoverUrl) return
+      const avg = await getAverageColorFromCoverUrl(this, fullCoverUrl)
+      if (avg) this.$emit('update:coverRgb', avg.rgba)
+    },
     seekToPosition(e) {
       if (!this.$refs.track) return
       const rect = this.$refs.track.getBoundingClientRect()
@@ -311,7 +317,6 @@ export default {
 
 .webos-tv-progress-buffered {
   background: rgba(255,255,255,0.3);
-  width: 60%;
 }
 
 .webos-tv-progress-played {
