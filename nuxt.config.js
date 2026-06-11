@@ -94,6 +94,17 @@ export default {
 
   build: {
     publicPath: './_nuxt/',
+    // Use stable filenames (no content hashes) so pulls overwrite the same
+    // files instead of leaving stale chunks alongside newly-named ones.
+    // HTTP caching is irrelevant for a file:// webOS app.
+    filenames: {
+      app: '[name].js',
+      chunk: '[name].js',
+      css: '[name].css',
+      img: 'img/[name].[ext]',
+      font: 'fonts/[name].[ext]',
+      video: 'video/[name].[ext]'
+    },
     postcss: {
       postcssOptions: {
         plugins: {
