@@ -82,7 +82,7 @@ html[data-platform='webos'] #content.playerOpen {
 }
 
 .bookshelfRow {
-  background-image: url(/wood_panels.jpg);
+  background-image: url(~static/wood_panels.jpg);
 }
 
 .bookshelfDivider {

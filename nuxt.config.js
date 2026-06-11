@@ -65,6 +65,30 @@ export default {
       page.html = page.html
         .replace(/<base[^>]*href="[^"]*"[^>]*>/i, '')
         .replace(/(<script[^>]+src=")\/(_nuxt\/)/g, '$1./$2')
+        .replace(/(<link[^>]+href=")\/(_nuxt\/)/g, '$1./$2')
+    },
+    async 'generate:done'(generator) {
+      // Nuxt's webpack builder strips leading './' from publicPath (converts
+      // './_nuxt/' to '/_nuxt/'), so the webpack runtime always has an absolute
+      // publicPath that breaks file:// loads on webOS. Patch it here to './_nuxt/'.
+      const fs = require('fs')
+      const path = require('path')
+      const nuxtDir = path.join(generator.distPath, '_nuxt')
+      const files = fs.readdirSync(nuxtDir).filter(f => f.endsWith('.js') && !f.endsWith('.worker.js'))
+      let patched = 0
+      for (const file of files) {
+        const fp = path.join(nuxtDir, file)
+        const src = fs.readFileSync(fp, 'utf8')
+        // Only the webpack runtime has o.p="/_nuxt/" or similar single-assignment
+        if (src.includes('.p="/_nuxt/"')) {
+          const fixed = src.replace(/\.p="\/(_nuxt\/)"/g, '.p="./$1"')
+          if (fixed !== src) {
+            fs.writeFileSync(fp, fixed)
+            patched++
+          }
+        }
+      }
+      console.log(`[webOS] Patched webpack publicPath in ${patched} file(s)`)
     }
   },
 
