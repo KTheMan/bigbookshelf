@@ -1,0 +1,25 @@
+{
+  "id": "com.audiobookshelf.tv",
+  "version": "0.13.0-beta",
+  "vendor": "advplyr",
+  "type": "web",
+  "main": "index.html",
+  "title": "Audiobookshelf",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "uiRevision": 2,
+  "resolution": "1920x1080",
+  "requiredPermissions": [
+    "internet",
+    "audio"
+  ],
+  "requiredMemory": 50,
+  "handlesRelaunch": true,
+  "disableBackHistoryAPI": false,
+  "splashBackground": "splash.png",
+  "transparent": false,
+  "bgColor": "#1a1a1a",
+  "supportsAudioGuidance": false,
+  "accessible": false,
+  "inAppPurchase": false
+} 
