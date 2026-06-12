@@ -9,6 +9,14 @@ module.exports = defineConfig({
   retries: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
 
+  // Serve the built dist/ so the suite is self-contained.
+  webServer: {
+    command: 'npx serve -l 7891 -s dist',
+    url: 'http://localhost:7891',
+    reuseExistingServer: !process.env.CI,
+    timeout: 60000
+  },
+
   use: {
     baseURL: 'http://localhost:7891',
     // 1920x1080 TV viewport as configured in nuxt.config.js

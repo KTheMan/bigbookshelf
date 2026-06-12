@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full py-4 overflow-hidden relative border-b border-white border-opacity-10" @click.stop="goToEpisodePage">
+  <div class="w-full py-4 overflow-hidden relative border-b border-white border-opacity-10" data-focusable @click.stop="goToEpisodePage">
     <div v-if="episode" class="w-full px-1">
       <!-- Help debug for testing -->
       <!-- <template>
@@ -15,8 +15,6 @@
 
       <p class="text-sm font-semibold">{{ title }}</p>
 
-      <p class="text-sm text-fg episode-subtitle mt-1.5 mb-0.5" v-html="subtitle" />
-
       <p v-if="sortKey === 'audioFile.metadata.filename'" class="text-xs text-fg-muted truncate mt-2 mb-0.5">
         <span class="font-semibold">{{ $getString('LabelFilename') }}</span
         >: <span class="font-light">{{ episode.audioFile.metadata.filename }}</span>
@@ -28,25 +26,28 @@
         <div v-if="episodeType" class="px-2 pt-px pb-0.5 mx-0.5 bg-primary bg-opacity-50 rounded-full text-xs font-light text-fg capitalize">{{ episodeType }}</div>
       </div>
 
-      <div class="flex items-center pt-2">
+      <!-- TV-optimized action row: larger controls spread across the width -->
+      <div class="flex items-center pt-3 gap-3">
         <!-- Play/Pause Button -->
-        <div class="h-10 px-4 border border-border rounded-full flex items-center justify-center cursor-pointer" :class="userIsFinished ? 'text-white text-opacity-40' : ''" @click.stop="playClick">
-          <span v-if="!playerIsStartingForThisMedia" class="material-symbols text-2xl fill leading-none" :class="streamIsPlaying ? '' : 'text-success'">
+        <div class="h-12 px-6 border border-border rounded-full flex items-center justify-center cursor-pointer" :class="userIsFinished ? 'text-white text-opacity-40' : ''" data-focusable @click.stop="playClick">
+          <span v-if="!playerIsStartingForThisMedia" class="material-symbols text-3xl fill leading-none" :class="streamIsPlaying ? '' : 'text-success'">
             {{ streamIsPlaying ? 'pause' : 'play_arrow' }}
           </span>
-          <svg v-else class="animate-spin" style="width: 28px; height: 28px" viewBox="0 0 24 24">
+          <svg v-else class="animate-spin" style="width: 32px; height: 32px" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" />
           </svg>
-          <p class="pl-2 pr-1 text-sm font-semibold">{{ timeRemaining }}</p>
+          <p class="pl-3 pr-1 text-base font-semibold">{{ timeRemaining }}</p>
         </div>
 
         <!-- Read Status Button -->
-        <ui-read-icon-btn :disabled="isProcessingReadUpdate" :is-read="userIsFinished" borderless class="mx-1" @click="toggleFinished" />
+        <div class="h-12 px-5 border border-border rounded-full flex items-center justify-center cursor-pointer" data-focusable @click.stop="toggleFinished">
+          <span class="material-symbols text-3xl leading-none" :class="userIsFinished ? 'text-success fill' : ''">{{ userIsFinished ? 'check_circle' : 'radio_button_unchecked' }}</span>
+        </div>
 
         <!-- Add to Playlist Button -->
-        <button v-if="!isLocal" class="mx-1.5" @click.stop="addToPlaylist">
-          <span class="material-symbols text-2xl leading-none">playlist_add</span>
-        </button>
+        <div v-if="!isLocal" class="h-12 px-5 border border-border rounded-full flex items-center justify-center cursor-pointer" data-focusable @click.stop="addToPlaylist">
+          <span class="material-symbols text-3xl leading-none">playlist_add</span>
+        </div>
 
         <!-- Spacer to push elements left -->
         <div class="flex-grow" />
@@ -103,9 +104,6 @@ export default {
     },
     title() {
       return this.episode.title || ''
-    },
-    subtitle() {
-      return this.episode.subtitle || this.episode.description || ''
     },
     episodeNumber() {
       return this.episode.episode
@@ -280,6 +278,7 @@ export default {
       }
     },
     async toggleFinished() {
+      if (this.isProcessingReadUpdate) return
       await this.$hapticsImpact()
 
       this.isProcessingReadUpdate = true

@@ -11,6 +11,8 @@
     "package:webos": "ares-package dist --output ipk",
     "package:tizen": "cp tizen/config.xml dist/ && cd dist && zip -r ../bigbookshelf-tizen.wgt . && cd ..",
     "serve": "npx serve -l 1337 -s dist",
+    "test": "playwright test",
+    "test:nav": "playwright test 07-dpad-navigation",
     "lint": "eslint . --ext .js,.vue",
     "clean": "rm -rf dist ipk *.wgt"
   },

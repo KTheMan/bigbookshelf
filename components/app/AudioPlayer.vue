@@ -862,6 +862,10 @@ export default {
       this.syncStatus = 0
       this.$store.commit('setPlaybackSession', this.playbackSession)
 
+      // A fresh play action always opens the full player. The mini player is
+      // only shown after the user collapses the fullscreen view to browse.
+      this.expandToFullscreen()
+
       // Set track width
       this.$nextTick(() => {
         if (this.titleMarquee) this.titleMarquee.reset()

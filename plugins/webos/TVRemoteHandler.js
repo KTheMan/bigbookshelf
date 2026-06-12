@@ -303,11 +303,28 @@ class TVRemoteHandler {
   }
 
   getFocusedElement() {
-    return document.activeElement
+    const active = document.activeElement
+    // document.activeElement defaults to <body> when nothing is focused, which
+    // would make spatial navigation compute from the whole-page rect. Treat the
+    // body/html as "nothing focused" and fall back to the element we last set.
+    if (active && active !== document.body && active !== document.documentElement) {
+      return active
+    }
+    if (this.focusedElement && this.focusedElement.isConnected) {
+      return this.focusedElement
+    }
+    return null
   }
 
   setFocus(el) {
     if (!el) return
+    // Plain <div>/<span> elements (e.g. [data-focusable]) are NOT natively
+    // focusable, so el.focus() is a no-op and document.activeElement never
+    // updates — breaking the spatial nav that reads activeElement. Give any
+    // non-natively-focusable element a tabindex so focus() actually works.
+    if (!this._isNativelyFocusable(el) && !el.hasAttribute('tabindex')) {
+      el.setAttribute('tabindex', '-1')
+    }
     el.focus()
     el.classList.add('webos-focused')
     this.focusedElement = el
@@ -319,6 +336,12 @@ class TVRemoteHandler {
     })
 
     this.log('Focus set to:', el.tagName, el.textContent?.substring(0, 50))
+  }
+
+  _isNativelyFocusable(el) {
+    const tag = el.tagName
+    if (tag === 'A') return el.hasAttribute('href')
+    return tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA'
   }
 
   activateFocused() {
