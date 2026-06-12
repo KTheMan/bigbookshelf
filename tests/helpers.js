@@ -2,9 +2,9 @@
  * Shared test helpers: connect to the ABS test server and return an authenticated page.
  */
 
-const ABS_SERVER = 'https://abs.knnygrdn.com'
-const TEST_USER = 'webos-test'
-const TEST_PASS = 'webos-test'
+const ABS_SERVER = process.env.ABS_SERVER || 'https://abs.knnygrdn.com'
+const TEST_USER = process.env.ABS_TEST_USER || 'webos-test'
+const TEST_PASS = process.env.ABS_TEST_PASS || 'webos-test'
 
 /**
  * Navigate to /connect, fill in server credentials, and wait until the bookshelf loads.
