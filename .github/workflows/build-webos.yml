@@ -47,30 +47,30 @@ jobs:
           
           mkdir -p CONTROL
           cat > CONTROL/control << EOF
-          Package: com.audiobookshelf.tv
+          Package: com.bigbookshelf.tv
           Version: $VERSION
           Architecture: arm
-          Maintainer: advplyr
+          Maintainer: KTheMan
           Section: multimedia
           Priority: optional
-          Description: Audiobookshelf - Self-hosted audiobook and podcast server client for LG webOS TV
+          Description: Bigbookshelf (BBS) - Audiobookshelf client for LG webOS TV
           EOF
-          
+
           tar czf control.tar.gz -C . CONTROL
           tar czf data.tar.gz -C dist .
-          ar rcs audiobookshelf-webos.ipk debian-binary control.tar.gz data.tar.gz
+          ar rcs bigbookshelf-webos.ipk debian-binary control.tar.gz data.tar.gz
 
       - name: Upload IPK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: audiobookshelf-webos-ipk
-          path: audiobookshelf-webos.ipk
+          name: bigbookshelf-webos-ipk
+          path: bigbookshelf-webos.ipk
           retention-days: 30
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: audiobookshelf-webos-dist
+          name: bigbookshelf-webos-dist
           path: dist/
           retention-days: 30
 
@@ -78,7 +78,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: audiobookshelf-webos.ipk
+          files: bigbookshelf-webos.ipk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
