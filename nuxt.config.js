@@ -14,7 +14,7 @@ export default {
   },
 
   head: {
-    title: 'Audiobookshelf',
+    title: 'Bigbookshelf',
     htmlAttrs: {
       lang: 'en',
       'data-platform': 'webos'
@@ -22,7 +22,7 @@ export default {
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=1920, height=1080, user-scalable=no' },
-      { hid: 'description', name: 'description', content: 'Audiobookshelf - Self-hosted audiobook and podcast server client for LG webOS TV' },
+      { hid: 'description', name: 'description', content: 'Bigbookshelf (BBS) - Audiobookshelf client for LG webOS TV' },
       { name: 'format-detection', content: 'telephone=no' }
     ],
     script: [

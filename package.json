@@ -1,8 +1,8 @@
 {
-  "name": "audiobookshelf-webos",
+  "name": "bigbookshelf-webos",
   "version": "0.13.0-beta",
-  "author": "advplyr",
-  "description": "Audiobookshelf client for LG webOS TV",
+  "author": "KTheMan",
+  "description": "Bigbookshelf (BBS) — Audiobookshelf client for LG webOS TV",
   "main": "index.html",
   "scripts": {
     "dev": "npx serve -l 1337 -s dist",

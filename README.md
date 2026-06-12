@@ -1,12 +1,12 @@
-# Audiobookshelf for LG webOS TV
+# Bigbookshelf (BBS) for LG webOS TV
 
-A client for [Audiobookshelf](https://www.audiobookshelf.org/) — a self-hosted audiobook and podcast server — built for LG webOS Smart TVs.
+An [Audiobookshelf](https://www.audiobookshelf.org/) client for LG webOS Smart TVs.
 
 Built on top of the [Audiobookshelf Android app](https://github.com/advplyr/audiobookshelf-app) codebase, adapted for the TV experience with remote control navigation and a 10-foot UI.
 
 ## Features
 
-- Connect to any Audiobookshelf server
+- Connect to any self-hosted Audiobookshelf server
 - Browse audiobook and podcast libraries
 - Full audio playback with progress tracking
 - Remote control navigation (D-pad, media keys, color keys)

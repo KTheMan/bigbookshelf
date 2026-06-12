@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Building Audiobookshelf for LG webOS TV..."
+echo "Building Bigbookshelf for LG webOS TV..."
 
 npm run build:web
 
@@ -11,12 +11,12 @@ mkdir -p ipk
 
 cat > ipk/appinfo.json << EOF
 {
-  "id": "com.audiobookshelf.tv",
+  "id": "com.bigbookshelf.tv",
   "version": "$(node -p "require('./package.json').version")",
-  "vendor": "advplyr",
+  "vendor": "KTheMan",
   "type": "web",
   "main": "index.html",
-  "title": "Audiobookshelf",
+  "title": "Bigbookshelf",
   "icon": "assets/icon.png",
   "largeIcon": "assets/largeIcon.png",
   "uiRevision": 2,

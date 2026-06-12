@@ -1,10 +1,10 @@
 {
-  "id": "com.audiobookshelf.tv",
+  "id": "com.bigbookshelf.tv",
   "version": "0.13.0-beta",
-  "vendor": "advplyr",
+  "vendor": "KTheMan",
   "type": "web",
   "main": "index.html",
-  "title": "Audiobookshelf",
+  "title": "Bigbookshelf",
   "icon": "assets/icon.png",
   "largeIcon": "assets/largeIcon.png",
   "uiRevision": 2,
