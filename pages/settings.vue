@@ -348,7 +348,10 @@ export default {
       }
     },
     applyZoom(value) {
-      document.documentElement.style.zoom = value
+      // Scale the root font-size so all rem-based Tailwind utilities resize
+      // proportionally within the fixed 1920×1080 viewport (same as browser zoom).
+      // webOS base is 20px; multiplying keeps the same feel at 100%.
+      document.documentElement.style.fontSize = (parseFloat(value) * 20) + 'px'
     },
     saveTheme(theme) {
       document.documentElement.dataset.theme = theme

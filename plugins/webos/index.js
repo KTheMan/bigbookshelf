@@ -9,6 +9,6 @@ Vue.prototype.$platform = 'webos'
 document.documentElement.dataset.platform = 'webos'
 
 const savedZoom = localStorage.getItem('webos-zoom')
-if (savedZoom) document.documentElement.style.zoom = savedZoom
+if (savedZoom) document.documentElement.style.fontSize = (parseFloat(savedZoom) * 20) + 'px'
 
 export { AbsAudioPlayer, AbsDownloader, AbsFileSystem, AbsLogger, AbsDatabase }
