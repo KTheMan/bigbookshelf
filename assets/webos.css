@@ -119,6 +119,11 @@ html[data-platform='webos'] body {
   @apply px-12 py-8;
 }
 
+/* Hide all scrollbars globally — TV navigation uses D-pad, not scrollbar drag */
+::-webkit-scrollbar {
+  display: none;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -133,11 +138,16 @@ html, body {
 
 /* On webOS (old Chromium/WebKit), -webkit-appearance: button from Tailwind's
    preflight causes the native OS button background to show through even when
-   background-color is transparent. Force a clean reset so bare buttons are
-   visually transparent unless explicitly styled otherwise. */
-html[data-platform='webos'] button {
+   background-color is transparent. Resetting with a plain `button` selector
+   (specificity 0,0,1) placed AFTER tailwind.css in the cascade overrides
+   the preflight's -webkit-appearance:button while still losing to Tailwind
+   utility classes like bg-primary (specificity 0,1,0). */
+button {
   -webkit-appearance: none;
   appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
 
 * {

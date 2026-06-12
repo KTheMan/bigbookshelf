@@ -16,7 +16,8 @@ export default {
   head: {
     title: 'Audiobookshelf',
     htmlAttrs: {
-      lang: 'en'
+      lang: 'en',
+      'data-platform': 'webos'
     },
     meta: [
       { charset: 'utf-8' },
