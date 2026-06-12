@@ -134,9 +134,6 @@ html, body {
 html[data-platform='webos'] button {
   -webkit-appearance: none;
   appearance: none;
-  background: transparent;
-  border: 0;
-  padding: 0;
 }
 
 * {

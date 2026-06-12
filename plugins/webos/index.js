@@ -6,5 +6,6 @@ import { AbsDatabase } from './AbsDatabase'
 import { AbsLogger } from './AbsLogger'
 
 Vue.prototype.$platform = 'webos'
+document.documentElement.dataset.platform = 'webos'
 
 export { AbsAudioPlayer, AbsDownloader, AbsFileSystem, AbsLogger, AbsDatabase }
