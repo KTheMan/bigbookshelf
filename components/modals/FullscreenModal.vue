@@ -72,6 +72,10 @@ export default {
   },
   beforeDestroy() {
     this.$eventBus.$off('close-modal', this.closeModalEvt)
+    if (this.el && this.el.parentNode) {
+      this.el.remove()
+      this.$store.commit('globals/setIsModalOpen', false)
+    }
   }
 }
 </script>

@@ -449,6 +449,7 @@ export default {
       return this.ebookFile
     },
     showDownload() {
+      if (this.$platform === 'webos') return false
       if (this.isPodcast || this.hasLocal) return false
       return this.user && this.userCanDownload && (this.showPlay || this.showRead)
     },

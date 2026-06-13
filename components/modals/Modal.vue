@@ -108,6 +108,12 @@ export default {
   },
   beforeDestroy() {
     this.$eventBus.$off('close-modal', this.closeModalEvt)
+    // If the component is destroyed while open (e.g. mid-navigation), clean up
+    // the portal element and the Vuex flag so they don't become zombie overlays.
+    if (this.show && this.el && this.el.parentNode) {
+      this.el.remove()
+      this.$store.commit('globals/setIsModalOpen', false)
+    }
   }
 }
 </script>

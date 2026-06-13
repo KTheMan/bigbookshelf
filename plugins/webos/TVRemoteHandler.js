@@ -318,15 +318,20 @@ class TVRemoteHandler {
       // move to the next item and be scrolled into view.
       if (!includeOffscreen && (rect.right <= 0 || rect.bottom <= 0 || rect.left >= window.innerWidth || rect.top >= window.innerHeight)) return false
       // Exclude elements clipped by an overflow:hidden ancestor (e.g. content
-      // behind the mini player bar after #content shrinks with playerOpen class)
-      let node = el.parentElement
-      while (node && node !== document.body) {
-        const ps = window.getComputedStyle(node)
-        if (ps.overflow === 'hidden' || ps.overflowY === 'hidden') {
-          const pr = node.getBoundingClientRect()
-          if (rect.bottom > pr.bottom + 2 || rect.top < pr.top - 2) return false
+      // behind the mini player bar after #content shrinks with playerOpen class).
+      // Skip this check in the off-screen pass — its whole purpose is to find
+      // elements just outside the viewport so focus can move there and scroll
+      // them in; overflow:hidden on #content must not block that.
+      if (!includeOffscreen) {
+        let node = el.parentElement
+        while (node && node !== document.body) {
+          const ps = window.getComputedStyle(node)
+          if (ps.overflow === 'hidden' || ps.overflowY === 'hidden') {
+            const pr = node.getBoundingClientRect()
+            if (rect.bottom > pr.bottom + 2 || rect.top < pr.top - 2) return false
+          }
+          node = node.parentElement
         }
-        node = node.parentElement
       }
       return true
     })
@@ -435,7 +440,13 @@ class TVRemoteHandler {
       store.commit('setShowSideDrawer', false)
       return
     }
-    // 2. Close any open modal. Check both the Vuex flag and any visible .modal
+    // 2. Close the ebook reader if open — it has no .modal class so the DOM
+    // check below would miss it.
+    if (store?.state.showReader) {
+      window.$nuxt?.$eventBus?.$emit('close-ebook')
+      return
+    }
+    // 3. Close any open modal. Check both the Vuex flag and any visible .modal
     // overlay in the DOM, since not every modal variant flips the flag.
     const hasVisibleModal = Array.from(document.querySelectorAll('.modal')).some((m) => {
       const s = window.getComputedStyle(m)
@@ -445,12 +456,12 @@ class TVRemoteHandler {
       window.$nuxt?.$eventBus?.$emit('close-modal')
       return
     }
-    // 3. Collapse the fullscreen player to the mini player before leaving the page
+    // 4. Collapse the fullscreen player to the mini player before leaving the page
     if (store?.state.playerIsFullscreen) {
       window.$nuxt?.$eventBus?.$emit('minimize-player')
       return
     }
-    // 4. Otherwise navigate back
+    // 5. Otherwise navigate back
     const router = window.$nuxt?.$router
     if (router && window.history.length > 1) {
       router.back()
@@ -479,7 +490,7 @@ class TVRemoteHandler {
 
   _scrollInDirection(direction) {
     const focused = this.getFocusedElement()
-    const scrollable = this._findScrollableParent(focused) || document.scrollingElement || document.documentElement
+    const scrollable = this._findScrollableParent(focused, direction) || document.scrollingElement || document.documentElement
     const amount = 250
     if (direction === 'up') scrollable.scrollBy({ top: -amount, behavior: 'smooth' })
     else if (direction === 'down') scrollable.scrollBy({ top: amount, behavior: 'smooth' })
@@ -487,14 +498,26 @@ class TVRemoteHandler {
     else if (direction === 'right') scrollable.scrollBy({ left: amount, behavior: 'smooth' })
   }
 
-  _findScrollableParent(el) {
+  // Find the nearest scrollable ancestor that can actually scroll in the given
+  // direction. Passing a direction prevents a horizontal shelf row (overflow-x:
+  // auto) from being returned for a vertical scroll request — which would cause
+  // Down to scroll inside the shelf rather than the page.
+  _findScrollableParent(el, direction = null) {
     if (!el) return null
     let node = el.parentElement
     while (node && node !== document.body) {
       const style = window.getComputedStyle(node)
       const overflow = style.overflow + style.overflowY + style.overflowX
-      if (/(auto|scroll)/.test(overflow) && (node.scrollHeight > node.clientHeight || node.scrollWidth > node.clientWidth)) {
-        return node
+      if (/(auto|scroll)/.test(overflow)) {
+        const canScrollY = node.scrollHeight > node.clientHeight
+        const canScrollX = node.scrollWidth > node.clientWidth
+        if (direction === 'up' || direction === 'down') {
+          if (canScrollY) return node
+        } else if (direction === 'left' || direction === 'right') {
+          if (canScrollX) return node
+        } else if (canScrollY || canScrollX) {
+          return node
+        }
       }
       node = node.parentElement
     }

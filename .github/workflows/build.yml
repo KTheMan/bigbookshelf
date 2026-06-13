@@ -126,19 +126,55 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
+      # ── Cloudflare IP allowlist (knnygrdn.com zone) ─────────────────────────
+      # Temporarily allow this runner's IP through Cloudflare so auth-gated
+      # tests can reach abs.knnygrdn.com. Skips cleanly when CF secrets aren't
+      # set. Rule is always deleted at the end even if tests fail.
+      # Requires secrets: CF_API_TOKEN (Zone:Firewall Services:Edit), CF_ZONE_ID
+      - name: Allowlist runner IP on Cloudflare
+        id: cf_rule
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ZONE_ID" ]; then
+            echo "CF secrets not set, skipping allowlist"
+            echo "rule_id=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          RUNNER_IP=$(curl -sf https://api.ipify.org)
+          RULE_ID=$(curl -sf -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/firewall/access_rules/rules" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"mode\":\"whitelist\",\"configuration\":{\"target\":\"ip\",\"value\":\"${RUNNER_IP}\"},\"notes\":\"CI run ${{ github.run_id }}\"}" \
+            | jq -r '.result.id')
+          echo "rule_id=${RULE_ID}" >> $GITHUB_OUTPUT
+
       - name: Run D-pad navigation tests
         run: npm run test:nav
         env:
           CI: true
-          # Optional env server (secrets) — the suite also audits the hardcoded
-          # fallback (abs.knnygrdn.com) and skips any server it can't reach.
           ABS_SERVE: ${{ secrets.ABS_SERVE }}
           ABS_USE: ${{ secrets.ABS_USE }}
           ABS_PASS: ${{ secrets.ABS_PASS }}
-          # Hardcoded test server credentials for the auth-gated route audit
-          ABS_SERVER: https://abs.knnygrdn.com
-          ABS_TEST_USER: webos-test
-          ABS_TEST_PASS: webos-test
+          ABS1_SERVE: ${{ secrets.ABS1_SERVE }}
+          ABS1_USE: ${{ secrets.ABS1_USE }}
+          ABS1_PASS: ${{ secrets.ABS1_PASS }}
+
+      - name: Remove runner IP from Cloudflare allowlist
+        if: always()
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+        run: |
+          RULE_ID="${{ steps.cf_rule.outputs.rule_id }}"
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$RULE_ID" ]; then
+            exit 0
+          fi
+          curl -sf -X DELETE \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/firewall/access_rules/rules/${RULE_ID}" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}"
 
       - name: Upload Playwright report
         if: always()

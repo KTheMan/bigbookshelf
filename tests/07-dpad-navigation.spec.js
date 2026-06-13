@@ -133,7 +133,10 @@ test.describe('Per-route focusability audit', () => {
       if (route.auth && !connected) {
         test.skip(true, 'No server connection available for auth-gated route')
       }
-      if (route.auth) await nav.tryConnect(page, connectToServer)
+      if (route.auth) {
+        const ok = await nav.tryConnect(page, connectToServer)
+        if (!ok) test.skip(true, 'Server connection failed in this test instance')
+      }
 
       await BOOT(page, route.path)
 
@@ -149,7 +152,10 @@ test.describe('Per-route focusability audit', () => {
       if (route.auth && !connected) {
         test.skip(true, 'No server connection available for auth-gated route')
       }
-      if (route.auth) await nav.tryConnect(page, connectToServer)
+      if (route.auth) {
+        const ok = await nav.tryConnect(page, connectToServer)
+        if (!ok) test.skip(true, 'Server connection failed in this test instance')
+      }
 
       await BOOT(page, route.path)
 
@@ -164,10 +170,11 @@ test.describe('Per-route focusability audit', () => {
   }
 })
 
-// ── Tier 3: multi-server audit (env server + hardcoded fallback) ───────────
-// Exercises the focusability audit against EVERY configured server so the
+// ── Tier 3: multi-server audit (all configured servers) ───────────────────
+// Exercises the focusability audit against every server in SERVER_CONFIGS so
 // collection / series / ebook-bearing screens are checked on each. Configs
-// that aren't reachable from the runner are skipped, not failed.
+// that aren't reachable from the runner are skipped, not failed. When no
+// servers are configured (CI with no secrets) the loop body never executes.
 
 const KEY_AUTH_ROUTES = [
   { path: '/bookshelf/library', name: 'Library' },
@@ -188,7 +195,8 @@ for (const config of SERVER_CONFIGS) {
     for (const route of KEY_AUTH_ROUTES) {
       test(`${route.name} (${route.path}) — every clickable region is remote-reachable`, async ({ page }) => {
         if (!connected) test.skip(true, `Server ${config.name} not reachable`)
-        await nav.tryConnect(page, (p) => connectToServer(p, config))
+        const ok = await nav.tryConnect(page, (p) => connectToServer(p, config))
+        if (!ok) test.skip(true, `Server ${config.name} connection failed in this test instance`)
 
         await BOOT(page, route.path)
 
