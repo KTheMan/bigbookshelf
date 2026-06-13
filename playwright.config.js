@@ -1,5 +1,13 @@
 // @ts-check
+const fs = require('fs')
 const { defineConfig, devices } = require('@playwright/test')
+
+// In the dev container Chromium lives at a fixed path; in CI / on other machines
+// Playwright resolves the browser it installed itself. Only pin the explicit path
+// when it actually exists, otherwise let Playwright find its own (executablePath
+// undefined) so `npx playwright install` works everywhere.
+const DEV_CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
+const executablePath = fs.existsSync(DEV_CHROME) ? DEV_CHROME : undefined
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -37,9 +45,7 @@ module.exports = defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
         launchOptions: {
-          executablePath: process.env.PLAYWRIGHT_BROWSERS_PATH
-            ? undefined
-            : '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+          executablePath,
           args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
         },
       },
