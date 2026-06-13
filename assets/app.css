@@ -4,6 +4,10 @@
 @import './absicons.css';
 @import './transitions.css';
 
+html, body {
+  overflow: hidden;
+}
+
 * {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
