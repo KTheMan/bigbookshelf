@@ -34,7 +34,10 @@ jobs:
 
       # ── webOS (LG) ──────────────────────────────────────────────────────────
 
-      - name: Prepare webOS IPK structure
+      - name: Install webOS CLI (ares-package)
+        run: npm install -g @webosose/ares-cli
+
+      - name: Prepare webOS app directory
         run: |
           cp appinfo.json dist/
           cp assets/icon.png dist/assets/
@@ -43,37 +46,16 @@ jobs:
 
       - name: Package webOS IPK
         run: |
-          VERSION=$(node -p "require('./appinfo.json').version")
-          APPID=com.bigbookshelf.tv
-
-          # An .ipk is an `ar` archive of three members, in this order:
-          #   debian-binary   -> the literal string "2.0"
-          #   control.tar.gz  -> the control file at the archive ROOT (./control),
-          #                      NOT nested under a CONTROL/ dir (opkg/dpkg read
-          #                      ./control directly — nesting it triggers
-          #                      "Failed to extract control file").
-          #   data.tar.gz     -> the payload under usr/palm/applications/<appid>/
-          #                      so webOS registers it as an app (this is the same
-          #                      layout `ares-package` produces).
-          echo "2.0" > debian-binary
-
-          mkdir -p control
-          cat > control/control << EOF
-          Package: $APPID
-          Version: $VERSION
-          Architecture: all
-          Maintainer: KTheMan
-          Section: multimedia
-          Priority: optional
-          Description: Bigbookshelf (BBS) - Audiobookshelf client for LG webOS TV
-          EOF
-          tar czf control.tar.gz -C control .
-
-          mkdir -p "data/usr/palm/applications/$APPID"
-          cp -a dist/. "data/usr/palm/applications/$APPID/"
-          tar czf data.tar.gz -C data .
-
-          ar rc bigbookshelf-webos.ipk debian-binary control.tar.gz data.tar.gz
+          # Use the official packager. A hand-rolled `ar` archive installs via
+          # opkg but the webOS appInstallService rejects it ("ipk verified
+          # failed", errorCode -5) because it lacks usr/palm/packages/<id>/
+          # packageinfo.json and the webOS-Package-Format-Version control field.
+          # ares-package produces the complete, verifiable layout. NOTE:
+          # appinfo.json "version" MUST be numeric major.minor.micro (no -beta
+          # suffix) or verification fails.
+          ares-package dist -o .
+          mv com.bigbookshelf.tv_*_all.ipk bigbookshelf-webos.ipk
+          ls -la bigbookshelf-webos.ipk
 
       - name: Upload webOS IPK artifact
         uses: actions/upload-artifact@v4

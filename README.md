@@ -58,21 +58,23 @@ The `releases/latest/download/...` URLs always resolve to the newest release.
 # SSH into the TV
 ssh root@<TV_IP_ADDRESS>
 
-# Download the latest IPK directly onto the TV
-curl -L -o /tmp/bigbookshelf-webos.ipk \
+# Download to the large user partition (the root fs is a tiny read-only
+# overlay — opkg fails there with "Only have 0K bytes available").
+curl -L -o /media/internal/bigbookshelf-webos.ipk \
   https://github.com/KTheMan/audiobookshelf-webos/releases/latest/download/bigbookshelf-webos.ipk
 
-# Install it — opkg on firmwares that ship it...
-opkg install /tmp/bigbookshelf-webos.ipk
-
-# ...or via the webOS install service if opkg is unavailable
-luna-send -n 1 'luna://com.webos.appInstallService/dev/install' \
-  '{"id":"com.bigbookshelf.tv","ipkUrl":"/tmp/bigbookshelf-webos.ipk","subscribe":true}'
+# Install via the webOS install service (routes into /media/developer; survives
+# reboots). Use -i to watch status through to "installed".
+luna-send -i 'luna://com.webos.appInstallService/dev/install' \
+  '{"id":"com.bigbookshelf.tv","ipkUrl":"/media/internal/bigbookshelf-webos.ipk","subscribe":true}'
 
 # Launch
 luna-send -n 1 'luna://com.webos.service.applicationManager/launch' \
   '{"id":"com.bigbookshelf.tv"}'
 ```
+
+> `opkg install` also works on some firmwares, but only if the root partition
+> has space — the install service above is the reliable route.
 
 To upgrade later, re-run the `curl` + install steps; remove the old copy first
 with `luna-send -n 1 'luna://com.webos.appInstallService/remove' '{"id":"com.bigbookshelf.tv"}'`
@@ -92,7 +94,7 @@ tizen install -n /tmp/bigbookshelf-tizen.wgt -t <device-id>
 
 > One-liner (download + install on a webOS TV in a single SSH command):
 > ```bash
-> ssh root@<TV_IP_ADDRESS> 'curl -L -o /tmp/bbs.ipk https://github.com/KTheMan/audiobookshelf-webos/releases/latest/download/bigbookshelf-webos.ipk && opkg install /tmp/bbs.ipk'
+> ssh root@<TV_IP_ADDRESS> 'curl -L -o /media/internal/bbs.ipk https://github.com/KTheMan/audiobookshelf-webos/releases/latest/download/bigbookshelf-webos.ipk && luna-send -n 5 "luna://com.webos.appInstallService/dev/install" "{\"id\":\"com.bigbookshelf.tv\",\"ipkUrl\":\"/media/internal/bbs.ipk\",\"subscribe\":true}"'
 > ```
 
 ### Via USB

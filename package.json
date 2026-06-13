@@ -1,6 +1,6 @@
 {
   "name": "bigbookshelf",
-  "version": "0.13.2-beta",
+  "version": "0.13.3-beta",
   "author": "KTheMan",
   "description": "Bigbookshelf (BBS) — Audiobookshelf client for Smart TVs (webOS, Tizen)",
   "main": "index.html",
