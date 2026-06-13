@@ -1,45 +1,51 @@
 /**
  * Shared test helpers: connect to an ABS server and return an authenticated page.
  *
- * Two server configs are supported so the suite can be exercised against both a
- * caller-supplied server (via env vars) and the hardcoded fallback:
- *   - env config: ABS_SERVE/ABS_USE/ABS_PASS (preferred) or the longer
- *     ABS_SERVER/ABS_TEST_USER/ABS_TEST_PASS names used by CI.
- *   - fallback:   https://abs.knnygrdn.com (webos-test / webos-test)
+ * Up to three server configs are supported, all via environment variables:
+ *   ABS_SERVE / ABS_USE / ABS_PASS       — primary server
+ *   ABS1_SERVE / ABS1_USE / ABS1_PASS    — secondary server (optional)
+ *   fallback: abs.knnygrdn.com            — local dev only (suppressed in CI)
  *
- * SERVER_CONFIGS lists every distinct config; tests that want broad coverage can
- * loop it and skip configs that aren't reachable. The single-server exports
- * (ABS_SERVER/TEST_USER/TEST_PASS, connectToServer) default to the primary
- * (env if provided, else fallback) for backwards compatibility.
+ * SERVER_CONFIGS lists every distinct, reachable config. Tests that want broad
+ * coverage loop it and skip configs that aren't reachable from the runner.
  */
 
+const mkConfig = (server, user, pass, label) =>
+  server && user && pass ? { name: `${label} (${server})`, server, user, pass } : null
+
 // Hardcoded fallback is only used in non-CI local dev. In CI, runner IPs are
-// blocked by self-hosted servers so we rely solely on secrets (ABS_SERVE etc.).
+// blocked by self-hosted servers so we rely solely on secrets.
 const FALLBACK = process.env.CI
   ? null
-  : {
-      name: 'fallback (abs.knnygrdn.com)',
-      server: 'https://abs.knnygrdn.com',
-      user: 'webos-test',
-      pass: 'webos-test'
-    }
+  : mkConfig('https://abs.knnygrdn.com', 'webos-test', 'webos-test', 'fallback')
 
-const envServer = process.env.ABS_SERVE || process.env.ABS_SERVER
-const envUser = process.env.ABS_USE || process.env.ABS_TEST_USER
-const envPass = process.env.ABS_PASS || process.env.ABS_TEST_PASS
-const ENV_CONFIG = envServer && envUser && envPass ? { name: `env (${envServer})`, server: envServer, user: envUser, pass: envPass } : null
+const ENV_CONFIG  = mkConfig(
+  process.env.ABS_SERVE  || process.env.ABS_SERVER,
+  process.env.ABS_USE    || process.env.ABS_TEST_USER,
+  process.env.ABS_PASS   || process.env.ABS_TEST_PASS,
+  'primary'
+)
+const ENV1_CONFIG = mkConfig(
+  process.env.ABS1_SERVE,
+  process.env.ABS1_USE,
+  process.env.ABS1_PASS,
+  'secondary'
+)
 
-// Build the ordered list: env server first, then fallback if different and present.
-const SERVER_CONFIGS = [
-  ENV_CONFIG,
-  FALLBACK && ENV_CONFIG?.server !== FALLBACK.server ? FALLBACK : null
-].filter(Boolean)
+// Deduplicate by server URL; order: primary → secondary → fallback.
+const seen = new Set()
+const SERVER_CONFIGS = [ENV_CONFIG, ENV1_CONFIG, FALLBACK].filter((c) => {
+  if (!c) return false
+  if (seen.has(c.server)) return false
+  seen.add(c.server)
+  return true
+})
 
-// PRIMARY is null when no server is configured — callers check before using.
+// PRIMARY is null when no server is configured — callers must check before using.
 const PRIMARY = SERVER_CONFIGS[0] || null
 const ABS_SERVER = PRIMARY?.server || null
-const TEST_USER = PRIMARY?.user || null
-const TEST_PASS = PRIMARY?.pass || null
+const TEST_USER  = PRIMARY?.user   || null
+const TEST_PASS  = PRIMARY?.pass   || null
 
 /**
  * Navigate to /connect, fill in server credentials, and wait until the bookshelf

@@ -141,6 +141,10 @@ jobs:
           ABS_SERVE: ${{ secrets.ABS_SERVE }}
           ABS_USE: ${{ secrets.ABS_USE }}
           ABS_PASS: ${{ secrets.ABS_PASS }}
+          # Optional second server — runs the multi-server Tier 3 audit on both.
+          ABS1_SERVE: ${{ secrets.ABS1_SERVE }}
+          ABS1_USE: ${{ secrets.ABS1_USE }}
+          ABS1_PASS: ${{ secrets.ABS1_PASS }}
 
       - name: Upload Playwright report
         if: always()
