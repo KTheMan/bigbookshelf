@@ -13,25 +13,33 @@
  * (env if provided, else fallback) for backwards compatibility.
  */
 
-const FALLBACK = {
-  name: 'fallback (abs.knnygrdn.com)',
-  server: 'https://abs.knnygrdn.com',
-  user: 'webos-test',
-  pass: 'webos-test'
-}
+// Hardcoded fallback is only used in non-CI local dev. In CI, runner IPs are
+// blocked by self-hosted servers so we rely solely on secrets (ABS_SERVE etc.).
+const FALLBACK = process.env.CI
+  ? null
+  : {
+      name: 'fallback (abs.knnygrdn.com)',
+      server: 'https://abs.knnygrdn.com',
+      user: 'webos-test',
+      pass: 'webos-test'
+    }
 
 const envServer = process.env.ABS_SERVE || process.env.ABS_SERVER
 const envUser = process.env.ABS_USE || process.env.ABS_TEST_USER
 const envPass = process.env.ABS_PASS || process.env.ABS_TEST_PASS
 const ENV_CONFIG = envServer && envUser && envPass ? { name: `env (${envServer})`, server: envServer, user: envUser, pass: envPass } : null
 
-// Primary first; include the fallback too (deduped if the env points at it).
-const SERVER_CONFIGS = ENV_CONFIG && ENV_CONFIG.server !== FALLBACK.server ? [ENV_CONFIG, FALLBACK] : [ENV_CONFIG || FALLBACK]
+// Build the ordered list: env server first, then fallback if different and present.
+const SERVER_CONFIGS = [
+  ENV_CONFIG,
+  FALLBACK && ENV_CONFIG?.server !== FALLBACK.server ? FALLBACK : null
+].filter(Boolean)
 
-const PRIMARY = SERVER_CONFIGS[0]
-const ABS_SERVER = PRIMARY.server
-const TEST_USER = PRIMARY.user
-const TEST_PASS = PRIMARY.pass
+// PRIMARY is null when no server is configured — callers check before using.
+const PRIMARY = SERVER_CONFIGS[0] || null
+const ABS_SERVER = PRIMARY?.server || null
+const TEST_USER = PRIMARY?.user || null
+const TEST_PASS = PRIMARY?.pass || null
 
 /**
  * Navigate to /connect, fill in server credentials, and wait until the bookshelf
@@ -39,8 +47,9 @@ const TEST_PASS = PRIMARY.pass
  * to target a specific server.
  */
 async function connectToServer(page, config = PRIMARY) {
+  if (!config) throw new Error('No server config available')
   await page.goto('/connect')
-  await page.waitForSelector('input[type="text"], input[placeholder*="server" i], input[placeholder*="address" i], input[id*="server" i]', { timeout: 10000 })
+  await page.waitForSelector('input[type="text"], input[placeholder*="server" i], input[placeholder*="address" i], input[id*="server" i]', { timeout: 8000 })
 
   // Fill server address
   const addressInput = page.locator('input').first()
@@ -57,8 +66,9 @@ async function connectToServer(page, config = PRIMARY) {
   // Submit
   await page.keyboard.press('Enter')
 
-  // Wait for redirect to bookshelf
-  await page.waitForURL('**/bookshelf**', { timeout: 20000 })
+  // Wait for redirect to bookshelf — 12s; self-hosted servers can be slow but
+  // we don't want one unreachable server blocking the whole suite for 20s+.
+  await page.waitForURL('**/bookshelf**', { timeout: 12000 })
 }
 
 module.exports = { connectToServer, ABS_SERVER, TEST_USER, TEST_PASS, SERVER_CONFIGS, PRIMARY, FALLBACK }

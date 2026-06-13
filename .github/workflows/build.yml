@@ -135,15 +135,12 @@ jobs:
         run: npm run test:nav
         env:
           CI: true
-          # Optional env server (secrets) — the suite also audits the hardcoded
-          # fallback (abs.knnygrdn.com) and skips any server it can't reach.
+          # Server credentials come from repo secrets only. Auth-gated tests
+          # skip automatically when these are unset. Do NOT hardcode a server
+          # URL here — public CI runner IPs are blocked by self-hosted servers.
           ABS_SERVE: ${{ secrets.ABS_SERVE }}
           ABS_USE: ${{ secrets.ABS_USE }}
           ABS_PASS: ${{ secrets.ABS_PASS }}
-          # Hardcoded test server credentials for the auth-gated route audit
-          ABS_SERVER: https://abs.knnygrdn.com
-          ABS_TEST_USER: webos-test
-          ABS_TEST_PASS: webos-test
 
       - name: Upload Playwright report
         if: always()
