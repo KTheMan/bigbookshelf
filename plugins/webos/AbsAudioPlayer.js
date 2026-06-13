@@ -25,6 +25,12 @@ class AbsAudioPlayerWeb extends WebPlugin {
     this.startTime = 0
     this.trackStartTime = 0
     this.useChapterTrack = false
+
+    // Sleep timer state (webOS/Tizen have no native player, so it's implemented here)
+    this._sleepTimer = null
+    this._sleepTimerRemaining = 0 // seconds
+    this._sleepTimerEndPos = null // absolute book position (seconds) for chapter-end timers
+    this._sleepTimerIsChapter = false
   }
 
   get currentTrackIndex() {
@@ -115,6 +121,10 @@ class AbsAudioPlayerWeb extends WebPlugin {
   }
 
   async closePlayback() {
+    this._clearSleepInterval()
+    this._sleepTimerRemaining = 0
+    this._sleepTimerEndPos = null
+    this._sleepTimerIsChapter = false
     this.playbackSession = null
     this.audioTracks = []
     this.playWhenReady = false
@@ -123,6 +133,94 @@ class AbsAudioPlayerWeb extends WebPlugin {
       this.player = null
     }
     this.notifyListeners('onClosePlayback')
+  }
+
+  // ── Sleep timer ────────────────────────────────────────────────────────────
+  // time is milliseconds. When isChapterTime is true, `time` is the absolute
+  // position in the book (ms) at which to stop; otherwise it's a countdown
+  // duration from now. The UI listens for onSleepTimerSet ({ value } in seconds)
+  // and onSleepTimerEnded ({ value } = stop position in seconds).
+
+  async setSleepTimer({ time, isChapterTime }) {
+    const ms = Number(time)
+    if (isNaN(ms) || ms <= 0) return { success: false }
+    this._clearSleepInterval()
+    this._sleepTimerIsChapter = !!isChapterTime
+    if (isChapterTime) {
+      this._sleepTimerEndPos = ms / 1000
+      this._sleepTimerRemaining = Math.max(0, Math.round(this._sleepTimerEndPos - this.overallCurrentTime))
+    } else {
+      this._sleepTimerEndPos = null
+      this._sleepTimerRemaining = Math.round(ms / 1000)
+    }
+    this._startSleepInterval()
+    this.notifyListeners('onSleepTimerSet', { value: this._sleepTimerRemaining, isAuto: false })
+    return { success: true }
+  }
+
+  async cancelSleepTimer() {
+    this._clearSleepInterval()
+    this._sleepTimerRemaining = 0
+    this._sleepTimerEndPos = null
+    this._sleepTimerIsChapter = false
+    this.notifyListeners('onSleepTimerSet', { value: 0, isAuto: false })
+    return { success: true }
+  }
+
+  async increaseSleepTime({ time }) {
+    const ms = Number(time)
+    if (isNaN(ms)) return { success: false }
+    // Bumping the time converts a chapter-end timer into a plain countdown
+    this._sleepTimerIsChapter = false
+    this._sleepTimerEndPos = null
+    this._sleepTimerRemaining = Math.max(0, this._sleepTimerRemaining) + Math.round(ms / 1000)
+    if (!this._sleepTimer) this._startSleepInterval()
+    this.notifyListeners('onSleepTimerSet', { value: this._sleepTimerRemaining, isAuto: false })
+    return { success: true }
+  }
+
+  async decreaseSleepTime({ time }) {
+    const ms = Number(time)
+    if (isNaN(ms)) return { success: false }
+    this._sleepTimerIsChapter = false
+    this._sleepTimerEndPos = null
+    this._sleepTimerRemaining = Math.max(0, this._sleepTimerRemaining - Math.round(ms / 1000))
+    this.notifyListeners('onSleepTimerSet', { value: this._sleepTimerRemaining, isAuto: false })
+    if (this._sleepTimerRemaining <= 0) this._sleepTimerExpired()
+    return { success: true }
+  }
+
+  _startSleepInterval() {
+    this._clearSleepInterval()
+    this._sleepTimer = setInterval(() => {
+      if (this._sleepTimerIsChapter && this._sleepTimerEndPos != null) {
+        // Recompute from the live playback position so seeks / playback rate are honored
+        this._sleepTimerRemaining = Math.max(0, Math.round(this._sleepTimerEndPos - this.overallCurrentTime))
+      } else if (this.playerPlaying) {
+        // Only count down while actually playing
+        this._sleepTimerRemaining -= 1
+      }
+      this.notifyListeners('onSleepTimerSet', { value: Math.max(0, this._sleepTimerRemaining), isAuto: false })
+      if (this._sleepTimerRemaining <= 0) this._sleepTimerExpired()
+    }, 1000)
+  }
+
+  _sleepTimerExpired() {
+    this._clearSleepInterval()
+    const stopPosition = this.overallCurrentTime
+    this.pausePlayer()
+    this._sleepTimerRemaining = 0
+    this._sleepTimerEndPos = null
+    this._sleepTimerIsChapter = false
+    this.notifyListeners('onSleepTimerSet', { value: 0, isAuto: false })
+    this.notifyListeners('onSleepTimerEnded', { value: stopPosition })
+  }
+
+  _clearSleepInterval() {
+    if (this._sleepTimer) {
+      clearInterval(this._sleepTimer)
+      this._sleepTimer = null
+    }
   }
 
   seekToTime(newTime) {

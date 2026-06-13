@@ -1,20 +1,20 @@
 <template>
-  <div class="w-full h-9 bg-bg relative z-20">
+  <div class="w-full h-11 bg-bg relative z-20">
     <div id="bookshelf-toolbar" class="absolute top-0 left-0 w-full h-full z-20 flex items-center px-2">
       <div class="flex items-center w-full text-sm">
         <p v-show="!selectedSeriesName" class="pt-1">{{ $formatNumber(totalEntities) }} {{ entityTitle }}</p>
         <p v-show="selectedSeriesName" class="ml-2 pt-1">{{ selectedSeriesName }} ({{ $formatNumber(totalEntities) }})</p>
         <div class="flex-grow" />
-        <span v-if="page == 'library' || seriesBookPage" class="material-symbols text-2xl px-2" data-focusable @click="changeView">{{ !bookshelfListView ? 'view_list' : 'grid_view' }}</span>
+        <span v-if="page == 'library' || seriesBookPage" class="toolbar-action material-symbols" data-focusable @click="changeView">{{ !bookshelfListView ? 'view_list' : 'grid_view' }}</span>
         <template v-if="page === 'library'">
-          <div class="relative flex items-center px-2">
-            <span class="material-symbols text-2xl" data-focusable @click="showFilterModal = true">filter_alt</span>
-            <div v-show="hasFilters" class="absolute top-0 right-2 w-2 h-2 rounded-full bg-success border border-green-300 shadow-sm z-10 pointer-events-none" />
+          <div class="relative flex items-center">
+            <span class="toolbar-action material-symbols" data-focusable @click="showFilterModal = true">filter_alt</span>
+            <div v-show="hasFilters" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-success border border-green-300 shadow-sm z-10 pointer-events-none" />
           </div>
-          <span class="material-symbols text-2xl px-2" data-focusable @click="showSortModal = true">sort</span>
+          <span class="toolbar-action material-symbols" data-focusable @click="showSortModal = true">sort</span>
         </template>
-        <span v-if="seriesBookPage" class="material-symbols text-2xl px-2" data-focusable @click="downloadSeries">download</span>
-        <span v-if="(page == 'library' && isBookLibrary) || seriesBookPage" class="material-symbols text-2xl px-2" data-focusable @click="showMoreMenuDialog = true">more_vert</span>
+        <span v-if="seriesBookPage" class="toolbar-action material-symbols" data-focusable @click="downloadSeries">download</span>
+        <span v-if="(page == 'library' && isBookLibrary) || seriesBookPage" class="toolbar-action material-symbols" data-focusable @click="showMoreMenuDialog = true">more_vert</span>
       </div>
     </div>
 
@@ -166,5 +166,22 @@ export default {
 <style>
 #bookshelf-toolbar {
   box-shadow: 0px 5px 5px #11111155;
+}
+
+/* Sort/filter/view controls: bigger, clearly separated D-pad targets so the
+   toolbar reads as a first-class row rather than tiny icons off to the side. */
+.toolbar-action {
+  font-size: 1.5rem;
+  padding: 0.3rem 0.55rem;
+  margin-left: 0.35rem;
+  border-radius: 8px;
+  line-height: 1;
+  cursor: pointer;
+}
+html[data-platform='webos'] .toolbar-action,
+html[data-platform='tizen'] .toolbar-action {
+  font-size: 1.85rem;
+  padding: 0.35rem 0.7rem;
+  margin-left: 0.5rem;
 }
 </style>

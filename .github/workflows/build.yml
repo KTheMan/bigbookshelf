@@ -135,7 +135,12 @@ jobs:
         run: npm run test:nav
         env:
           CI: true
-          # Test server credentials for auth-gated route audit
+          # Optional env server (secrets) — the suite also audits the hardcoded
+          # fallback (abs.knnygrdn.com) and skips any server it can't reach.
+          ABS_SERVE: ${{ secrets.ABS_SERVE }}
+          ABS_USE: ${{ secrets.ABS_USE }}
+          ABS_PASS: ${{ secrets.ABS_PASS }}
+          # Hardcoded test server credentials for the auth-gated route audit
           ABS_SERVER: https://abs.knnygrdn.com
           ABS_TEST_USER: webos-test
           ABS_TEST_PASS: webos-test

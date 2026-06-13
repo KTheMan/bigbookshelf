@@ -4,13 +4,13 @@
       <div class="w-full h-full absolute top-0 left-0 pointer-events-none audio-player-gradient" style="background: var(--gradient-audio-player)" />
 
       <div class="top-4 left-4 absolute cursor-pointer">
-        <span class="material-symbols text-5xl" :class="{ 'text-black text-opacity-75': coverBgIsLight && theme !== 'black' }" @click="collapseFullscreen">keyboard_arrow_down</span>
+        <span class="material-symbols text-5xl" data-focusable :class="{ 'text-black text-opacity-75': coverBgIsLight && theme !== 'black' }" @click="collapseFullscreen">keyboard_arrow_down</span>
       </div>
       <div v-show="showCastBtn" class="top-6 right-16 absolute cursor-pointer">
-        <span class="material-symbols text-3xl" :class="coverBgIsLight && theme !== 'black' ? 'text-black' : ''" @click="castClick">{{ isCasting ? 'cast_connected' : 'cast' }}</span>
+        <span class="material-symbols text-3xl" data-focusable :class="coverBgIsLight && theme !== 'black' ? 'text-black' : ''" @click="castClick">{{ isCasting ? 'cast_connected' : 'cast' }}</span>
       </div>
       <div class="top-6 right-4 absolute cursor-pointer">
-        <span class="material-symbols text-3xl" :class="{ 'text-black text-opacity-75': coverBgIsLight && theme !== 'black' }" @click="showMoreMenuDialog = true">more_vert</span>
+        <span class="material-symbols text-3xl" data-focusable :class="{ 'text-black text-opacity-75': coverBgIsLight && theme !== 'black' }" @click="showMoreMenuDialog = true">more_vert</span>
       </div>
       <p class="top-4 absolute left-0 right-0 mx-auto text-center uppercase tracking-widest text-opacity-75" :class="{ 'text-black text-opacity-75': coverBgIsLight && theme !== 'black' }" style="font-size: 10px">{{ isDirectPlayMethod ? $strings.LabelPlaybackDirect : isLocalPlayMethod ? $strings.LabelPlaybackLocal : $strings.LabelPlaybackTranscode }}</p>
     </div>
@@ -48,43 +48,43 @@
     </div>
 
     <div id="playerContent" class="playerContainer w-full z-20 absolute bottom-0 left-0 right-0 p-2 pointer-events-auto transition-all" :style="{ backgroundColor: showFullscreen ? '' : coverRgb }" @click="clickContainer">
-      <div v-if="showFullscreen" class="absolute bottom-4 left-0 right-0 w-full pb-4 pt-2 mx-auto px-6" style="max-width: 414px">
+      <div v-if="showFullscreen" class="player-action-bar absolute bottom-4 left-0 right-0 w-full pb-4 pt-2 mx-auto px-6" style="max-width: 414px">
         <div class="flex items-center justify-between pointer-events-auto">
-          <span v-if="!isPodcast && serverLibraryItemId && socketConnected" class="material-symbols text-3xl text-fg-muted cursor-pointer" :class="{ fill: bookmarks.length }" @click="$emit('showBookmarks')">bookmark</span>
+          <span v-if="!isPodcast && serverLibraryItemId && socketConnected" class="material-symbols text-3xl text-fg-muted cursor-pointer" data-focusable :class="{ fill: bookmarks.length }" @click="$emit('showBookmarks')">bookmark</span>
           <!-- hidden for podcasts but still using this as a placeholder -->
           <span v-else class="material-symbols text-3xl text-white text-opacity-0">bookmark</span>
 
-          <span class="font-mono text-fg-muted cursor-pointer" style="font-size: 1.35rem" @click="$emit('selectPlaybackSpeed')">{{ currentPlaybackRate }}x</span>
-          <svg v-if="!sleepTimerRunning" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-fg-muted cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" @click.stop="$emit('showSleepTimer')">
+          <span class="font-mono text-fg-muted cursor-pointer" data-focusable style="font-size: 1.35rem" @click="$emit('selectPlaybackSpeed')">{{ currentPlaybackRate }}x</span>
+          <svg v-if="!sleepTimerRunning" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-fg-muted cursor-pointer" data-focusable fill="none" viewBox="0 0 24 24" stroke="currentColor" @click.stop="$emit('showSleepTimer')">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
-          <div v-else class="h-7 w-7 flex items-center justify-around cursor-pointer" @click.stop="$emit('showSleepTimer')">
+          <div v-else class="h-7 w-7 flex items-center justify-around cursor-pointer" data-focusable @click.stop="$emit('showSleepTimer')">
             <p class="text-xl font-mono text-success">{{ sleepTimeRemainingPretty }}</p>
           </div>
 
-          <span class="material-symbols text-3xl text-fg cursor-pointer" :class="chapters.length ? 'text-opacity-75' : 'text-opacity-10'" @click="clickChaptersBtn">format_list_bulleted</span>
+          <span class="material-symbols text-3xl text-fg cursor-pointer" data-focusable :class="chapters.length ? 'text-opacity-75' : 'text-opacity-10'" @click="clickChaptersBtn">format_list_bulleted</span>
         </div>
       </div>
       <div v-else class="w-full h-full absolute top-0 left-0 pointer-events-none audio-player-gradient-minimized" style="background: var(--gradient-minimized-audio-player)" />
 
       <div id="playerControls" class="absolute right-0 bottom-0 mx-auto" style="max-width: 414px">
         <div class="flex items-center max-w-full" :class="playerSettings.lockUi ? 'justify-center' : 'justify-between'">
-          <span v-show="showFullscreen && !playerSettings.lockUi" class="material-symbols next-icon text-fg cursor-pointer" :class="showLoadingState ? 'text-opacity-10' : 'text-opacity-75'" @click.stop="jumpChapterStart">first_page</span>
-          <div v-show="!playerSettings.lockUi" class="jump-icon text-fg cursor-pointer flex flex-col items-center" :class="showLoadingState ? 'text-opacity-10' : 'text-opacity-75'" @click.stop="jumpBackwards">
+          <span v-show="showFullscreen && !playerSettings.lockUi" class="material-symbols next-icon text-fg cursor-pointer" data-focusable :class="showLoadingState ? 'text-opacity-10' : 'text-opacity-75'" @click.stop="jumpChapterStart">first_page</span>
+          <div v-show="!playerSettings.lockUi" class="jump-icon text-fg cursor-pointer flex flex-col items-center" data-focusable :class="showLoadingState ? 'text-opacity-10' : 'text-opacity-75'" @click.stop="jumpBackwards">
             <span class="material-symbols text-3xl leading-none">replay</span>
             <span v-if="showFullscreen" class="jump-label text-[10px] font-semibold leading-tight">{{ jumpBackwardsLabel }}</span>
           </div>
-          <div class="play-btn cursor-pointer shadow-sm flex items-center justify-center rounded-full text-primary mx-4 relative overflow-hidden" :style="{ backgroundColor: coverRgb }" :class="{ 'animate-spin': seekLoading }" @mousedown.prevent @mouseup.prevent @click.stop="playPauseClick">
+          <div class="play-btn cursor-pointer shadow-sm flex items-center justify-center rounded-full text-primary mx-4 relative overflow-hidden" data-focusable :style="{ backgroundColor: coverRgb }" :class="{ 'animate-spin': seekLoading }" @mousedown.prevent @mouseup.prevent @click.stop="playPauseClick">
             <div v-if="!coverBgIsLight" class="absolute top-0 left-0 w-full h-full bg-white bg-opacity-20 pointer-events-none" />
 
             <span v-if="!showLoadingState" class="material-symbols fill" :class="{ 'text-white': coverRgb && !coverBgIsLight }">{{ seekLoading ? 'autorenew' : !isPlaying ? 'play_arrow' : 'pause' }}</span>
             <widgets-spinner-icon v-else class="h-8 w-8" />
           </div>
-          <div v-show="!playerSettings.lockUi" class="jump-icon text-fg cursor-pointer flex flex-col items-center" :class="showLoadingState ? 'text-opacity-10' : 'text-opacity-75'" @click.stop="jumpForward">
+          <div v-show="!playerSettings.lockUi" class="jump-icon text-fg cursor-pointer flex flex-col items-center" data-focusable :class="showLoadingState ? 'text-opacity-10' : 'text-opacity-75'" @click.stop="jumpForward">
             <span class="material-symbols text-3xl leading-none">forward_media</span>
             <span v-if="showFullscreen" class="jump-label text-[10px] font-semibold leading-tight">{{ jumpForwardLabel }}</span>
           </div>
-          <span v-show="showFullscreen && !playerSettings.lockUi" class="material-symbols next-icon text-fg cursor-pointer" :class="nextChapter && !showLoadingState ? 'text-opacity-75' : 'text-opacity-10'" @click.stop="jumpNextChapter">last_page</span>
+          <span v-show="showFullscreen && !playerSettings.lockUi" class="material-symbols next-icon text-fg cursor-pointer" data-focusable :class="nextChapter && !showLoadingState ? 'text-opacity-75' : 'text-opacity-10'" @click.stop="jumpNextChapter">last_page</span>
         </div>
       </div>
 
@@ -263,12 +263,13 @@ export default {
         }
         return width
       } else {
-        // Landscape
+        // Landscape (always a TV on webOS/Tizen) — use a larger cover so the
+        // artwork reads well from across the room.
         const heightScale = (this.windowHeight - 200) / 651
         if (this.bookCoverAspectRatio === 1) {
-          return 260 * heightScale
+          return 340 * heightScale
         }
-        return 190 * heightScale
+        return 250 * heightScale
       }
     },
     showLoadingState() {
@@ -1168,5 +1169,68 @@ export default {
 }
 .audio-player-gradient-minimized {
   background: linear-gradient(145deg, rgba(38, 38, 38, 0.5) 0%, rgba(38, 38, 38, 0.9) 20%, rgb(38, 38, 38) 60%);
+}
+
+/* ── TV (webOS/Tizen) fullscreen player polish ──────────────────────────────
+   The fullscreen player is a phone-first layout capped at ~414px and pinned
+   left, which looks cramped and tiny on a 1080p TV. On TV we widen the bottom
+   regions, center them, enlarge the controls, and add vertical separation so
+   the artwork, track, transport controls, and action row read as distinct
+   bands from across the room. */
+html[data-platform='webos'] .fullscreen #playerControls,
+html[data-platform='tizen'] .fullscreen #playerControls {
+  max-width: 760px !important;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  bottom: 96px;
+}
+html[data-platform='webos'] .fullscreen #playerControls .play-btn,
+html[data-platform='tizen'] .fullscreen #playerControls .play-btn {
+  height: 88px;
+  width: 88px;
+  min-width: 88px;
+  min-height: 88px;
+  margin: 0 36px;
+}
+html[data-platform='webos'] .fullscreen #playerControls .play-btn .material-symbols,
+html[data-platform='tizen'] .fullscreen #playerControls .play-btn .material-symbols {
+  font-size: 3rem;
+}
+html[data-platform='webos'] .fullscreen #playerControls .jump-icon,
+html[data-platform='tizen'] .fullscreen #playerControls .jump-icon {
+  font-size: 3.2rem;
+}
+html[data-platform='webos'] .fullscreen #playerControls .jump-label,
+html[data-platform='tizen'] .fullscreen #playerControls .jump-label {
+  font-size: 0.85rem !important;
+}
+html[data-platform='webos'] .fullscreen #playerControls .next-icon,
+html[data-platform='tizen'] .fullscreen #playerControls .next-icon {
+  font-size: 2.6rem;
+}
+html[data-platform='webos'] .fullscreen #playerTrack,
+html[data-platform='tizen'] .fullscreen #playerTrack {
+  max-width: 820px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  bottom: 188px;
+}
+html[data-platform='webos'] .fullscreen .player-action-bar,
+html[data-platform='tizen'] .fullscreen .player-action-bar {
+  max-width: 720px !important;
+  bottom: 28px;
+}
+html[data-platform='webos'] .fullscreen .player-action-bar .material-symbols,
+html[data-platform='tizen'] .fullscreen .player-action-bar .material-symbols {
+  font-size: 2.3rem;
+}
+/* Lift the centered cover a touch so it doesn't crowd the title text below it */
+html[data-platform='webos'] .fullscreen .cover-wrapper,
+html[data-platform='tizen'] .fullscreen .cover-wrapper {
+  bottom: calc(50% + 150px - (var(--cover-image-height) / 2));
 }
 </style>

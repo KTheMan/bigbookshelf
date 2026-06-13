@@ -11,7 +11,7 @@
  *     new pages are covered by adding one line to the manifest.
  */
 const { test, expect } = require('@playwright/test')
-const { connectToServer } = require('./helpers')
+const { connectToServer, SERVER_CONFIGS } = require('./helpers')
 const ROUTES = require('./routes')
 const nav = require('./nav-helpers')
 
@@ -163,3 +163,42 @@ test.describe('Per-route focusability audit', () => {
     })
   }
 })
+
+// ── Tier 3: multi-server audit (env server + hardcoded fallback) ───────────
+// Exercises the focusability audit against EVERY configured server so the
+// collection / series / ebook-bearing screens are checked on each. Configs
+// that aren't reachable from the runner are skipped, not failed.
+
+const KEY_AUTH_ROUTES = [
+  { path: '/bookshelf/library', name: 'Library' },
+  { path: '/bookshelf/collections', name: 'Collections' },
+  { path: '/bookshelf/series', name: 'Series' }
+]
+
+for (const config of SERVER_CONFIGS) {
+  test.describe(`Multi-server audit — ${config.name}`, () => {
+    let connected = false
+
+    test.beforeAll(async ({ browser }) => {
+      const page = await browser.newPage()
+      connected = await nav.tryConnect(page, (p) => connectToServer(p, config))
+      await page.close()
+    })
+
+    for (const route of KEY_AUTH_ROUTES) {
+      test(`${route.name} (${route.path}) — every clickable region is remote-reachable`, async ({ page }) => {
+        if (!connected) test.skip(true, `Server ${config.name} not reachable`)
+        await nav.tryConnect(page, (p) => connectToServer(p, config))
+
+        await BOOT(page, route.path)
+
+        const orphans = await nav.findUnreachableClickables(page)
+        expect(
+          orphans,
+          `Unreachable clickable regions on ${route.path} @ ${config.name}:\n` +
+            orphans.map((o) => `  <${o.tag} class="${o.classes}"> "${o.text}"`).join('\n')
+        ).toEqual([])
+      })
+    }
+  })
+}

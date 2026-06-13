@@ -176,9 +176,11 @@ html[data-platform='webos'] .bookshelfRow {
   padding-right: 24px;
 }
 
-/* Focused element outline — matches both native :focus and the .webos-focused
+/* Focused element indicator — matches both native :focus and the .webos-focused
    class that TVRemoteHandler applies (needed on older Chromium where div.focus()
-   doesn't trigger :focus reliably). */
+   doesn't trigger :focus reliably).
+   Uses box-shadow with soft glow for clean rendering on rounded and small elements,
+   subtle scale for visual feedback, and smooth transitions for pleasant interaction. */
 html[data-platform='webos'] [tabindex]:focus,
 html[data-platform='webos'] [tabindex].webos-focused,
 html[data-platform='webos'] [data-focusable]:focus,
@@ -187,8 +189,25 @@ html[data-platform='webos'] button:focus,
 html[data-platform='webos'] button.webos-focused,
 html[data-platform='webos'] a:focus,
 html[data-platform='webos'] a.webos-focused {
-  outline: 3px solid #1ad691;
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 214, 145, 0.9), 0 0 12px 2px rgba(26, 214, 145, 0.35);
+  transform: scale(1.04);
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
+  position: relative;
+  z-index: 45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-platform='webos'] [tabindex]:focus,
+  html[data-platform='webos'] [tabindex].webos-focused,
+  html[data-platform='webos'] [data-focusable]:focus,
+  html[data-platform='webos'] [data-focusable].webos-focused,
+  html[data-platform='webos'] button:focus,
+  html[data-platform='webos'] button.webos-focused,
+  html[data-platform='webos'] a:focus,
+  html[data-platform='webos'] a.webos-focused {
+    transform: none;
+  }
 }
 
 /* Nav bar and toolbar on TV */

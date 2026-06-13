@@ -10,7 +10,9 @@ html[data-platform='tizen'] body {
   font-size: 1.25rem;
 }
 
-/* Focused element outline — includes .webos-focused class fallback */
+/* Focused element indicator — includes .webos-focused class fallback.
+   Uses box-shadow with soft glow for clean rendering on rounded and small elements,
+   subtle scale for visual feedback, and smooth transitions for pleasant interaction. */
 html[data-platform='tizen'] [tabindex]:focus,
 html[data-platform='tizen'] [tabindex].webos-focused,
 html[data-platform='tizen'] [data-focusable]:focus,
@@ -19,8 +21,25 @@ html[data-platform='tizen'] button:focus,
 html[data-platform='tizen'] button.webos-focused,
 html[data-platform='tizen'] a:focus,
 html[data-platform='tizen'] a.webos-focused {
-  outline: 3px solid #1ad691;
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 214, 145, 0.9), 0 0 12px 2px rgba(26, 214, 145, 0.35);
+  transform: scale(1.04);
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
+  position: relative;
+  z-index: 45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-platform='tizen'] [tabindex]:focus,
+  html[data-platform='tizen'] [tabindex].webos-focused,
+  html[data-platform='tizen'] [data-focusable]:focus,
+  html[data-platform='tizen'] [data-focusable].webos-focused,
+  html[data-platform='tizen'] button:focus,
+  html[data-platform='tizen'] button.webos-focused,
+  html[data-platform='tizen'] a:focus,
+  html[data-platform='tizen'] a.webos-focused {
+    transform: none;
+  }
 }
 
 /* Appbar: larger icons and library label */

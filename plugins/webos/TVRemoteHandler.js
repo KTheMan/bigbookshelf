@@ -354,16 +354,27 @@ class TVRemoteHandler {
 
   handleBack() {
     const store = window.$nuxt?.$store
-    // Close the side drawer first if it's open
+    // 1. Close the side drawer first if it's open
     if (store?.state.showSideDrawer) {
       store.commit('setShowSideDrawer', false)
       return
     }
-    // Close any open modal via the shared event bus
-    if (store?.state.globals?.isModalOpen) {
+    // 2. Close any open modal. Check both the Vuex flag and any visible .modal
+    // overlay in the DOM, since not every modal variant flips the flag.
+    const hasVisibleModal = Array.from(document.querySelectorAll('.modal')).some((m) => {
+      const s = window.getComputedStyle(m)
+      return s.opacity !== '0' && s.display !== 'none' && s.visibility !== 'hidden'
+    })
+    if (store?.state.globals?.isModalOpen || hasVisibleModal) {
       window.$nuxt?.$eventBus?.$emit('close-modal')
       return
     }
+    // 3. Collapse the fullscreen player to the mini player before leaving the page
+    if (store?.state.playerIsFullscreen) {
+      window.$nuxt?.$eventBus?.$emit('minimize-player')
+      return
+    }
+    // 4. Otherwise navigate back
     const router = window.$nuxt?.$router
     if (router && window.history.length > 1) {
       router.back()
@@ -447,7 +458,18 @@ export default ({ app }, inject) => {
       clearTimeout(tvRemote._upHoldTimer)
       tvRemote._upHoldTimer = null
     }
-    setTimeout(() => tvRemote.setInitialFocus(), 150)
+    setTimeout(() => {
+      // If navigation was triggered from a main nav item (the appbar), keep
+      // focus on that item so movement stays relative — pressing a nav button
+      // shouldn't fling the selection into the middle of the new page.
+      const focused = tvRemote.getFocusedElement()
+      const appbar = document.getElementById('appbar')
+      if (focused && focused.isConnected && appbar && appbar.contains(focused)) {
+        tvRemote.setFocus(focused)
+        return
+      }
+      tvRemote.setInitialFocus()
+    }, 150)
   })
   // Also set initial focus on first app load
   setTimeout(() => tvRemote.setInitialFocus(), 300)
