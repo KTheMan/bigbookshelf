@@ -11,7 +11,7 @@
  *     new pages are covered by adding one line to the manifest.
  */
 const { test, expect } = require('@playwright/test')
-const { connectToServer, SERVER_CONFIGS } = require('./helpers')
+const { connectToServer, connectToFirstReachable, SERVER_CONFIGS } = require('./helpers')
 const ROUTES = require('./routes')
 const nav = require('./nav-helpers')
 
@@ -121,10 +121,12 @@ test.describe('Focusability audit self-check', () => {
 
 test.describe('Per-route focusability audit', () => {
   let connected = false
+  let workingConfig = null
 
   test.beforeAll(async ({ browser }) => {
     const page = await browser.newPage()
-    connected = await nav.tryConnect(page, connectToServer)
+    workingConfig = await connectToFirstReachable(page)
+    connected = workingConfig !== null
     await page.close()
   })
 
@@ -134,7 +136,7 @@ test.describe('Per-route focusability audit', () => {
         test.skip(true, 'No server connection available for auth-gated route')
       }
       if (route.auth) {
-        const ok = await nav.tryConnect(page, connectToServer)
+        const ok = await nav.tryConnect(page, (p) => connectToServer(p, workingConfig))
         if (!ok) test.skip(true, 'Server connection failed in this test instance')
       }
 
@@ -153,7 +155,7 @@ test.describe('Per-route focusability audit', () => {
         test.skip(true, 'No server connection available for auth-gated route')
       }
       if (route.auth) {
-        const ok = await nav.tryConnect(page, connectToServer)
+        const ok = await nav.tryConnect(page, (p) => connectToServer(p, workingConfig))
         if (!ok) test.skip(true, 'Server connection failed in this test instance')
       }
 

@@ -77,4 +77,21 @@ async function connectToServer(page, config = PRIMARY) {
   await page.waitForURL('**/bookshelf**', { timeout: 12000 })
 }
 
-module.exports = { connectToServer, ABS_SERVER, TEST_USER, TEST_PASS, SERVER_CONFIGS, PRIMARY, FALLBACK }
+/**
+ * Try each SERVER_CONFIG in order and return the first one that successfully
+ * connects, or null if all fail. Tier 2 uses this so tests only skip when
+ * every configured server is unreachable, not just the primary.
+ */
+async function connectToFirstReachable(page) {
+  for (const config of SERVER_CONFIGS) {
+    try {
+      await connectToServer(page, config)
+      return config
+    } catch (e) {
+      // try next
+    }
+  }
+  return null
+}
+
+module.exports = { connectToServer, connectToFirstReachable, ABS_SERVER, TEST_USER, TEST_PASS, SERVER_CONFIGS, PRIMARY, FALLBACK }
