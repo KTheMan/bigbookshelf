@@ -124,10 +124,8 @@ test.describe('Per-route focusability audit', () => {
   let workingConfig = null
 
   test.beforeAll(async ({ browser }) => {
-    const page = await browser.newPage()
-    workingConfig = await connectToFirstReachable(page)
+    workingConfig = await connectToFirstReachable(browser)
     connected = workingConfig !== null
-    await page.close()
   })
 
   for (const route of ROUTES) {

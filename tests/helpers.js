@@ -79,17 +79,20 @@ async function connectToServer(page, config = PRIMARY) {
 
 /**
  * Try each SERVER_CONFIG in order and return the first one that successfully
- * connects, or null if all fail. Tier 2 uses this so tests only skip when
- * every configured server is unreachable, not just the primary.
+ * connects, or null if all fail. Opens a fresh page per attempt so stale SPA
+ * state from a failed login doesn't block the next server's connect form.
  */
-async function connectToFirstReachable(page) {
+async function connectToFirstReachable(browser) {
   for (const config of SERVER_CONFIGS) {
+    const page = await browser.newPage()
     try {
       await connectToServer(page, config)
       console.log(`[connectToFirstReachable] connected to ${config.name}`)
+      await page.close()
       return config
     } catch (e) {
       console.log(`[connectToFirstReachable] ${config.name} failed: ${e.message?.split('\n')[0]}`)
+      await page.close()
     }
   }
   console.log('[connectToFirstReachable] all servers unreachable')
