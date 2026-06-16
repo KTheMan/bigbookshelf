@@ -86,11 +86,13 @@ async function connectToFirstReachable(page) {
   for (const config of SERVER_CONFIGS) {
     try {
       await connectToServer(page, config)
+      console.log(`[connectToFirstReachable] connected to ${config.name}`)
       return config
     } catch (e) {
-      // try next
+      console.log(`[connectToFirstReachable] ${config.name} failed: ${e.message?.split('\n')[0]}`)
     }
   }
+  console.log('[connectToFirstReachable] all servers unreachable')
   return null
 }
 
