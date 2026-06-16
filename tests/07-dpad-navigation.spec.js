@@ -15,11 +15,22 @@ const { connectToServer, connectToFirstReachable, SERVER_CONFIGS } = require('./
 const ROUTES = require('./routes')
 const nav = require('./nav-helpers')
 
-const BOOT = async (page, path) => {
+const BOOT = async (page, path, { waitForContent = false } = {}) => {
   await page.goto(path)
   await page.waitForLoadState('domcontentloaded')
-  // Let the TVRemoteHandler plugin initialize and run its initial-focus pass.
-  await page.waitForTimeout(450)
+  if (waitForContent) {
+    // Auth-gated pages run mounted() → attemptConnection() (IndexedDB read +
+    // /api/authorize + initLibraries) which takes 1-2 s on page reload. Wait
+    // until focusable content actually appears rather than a fixed delay.
+    await page.waitForFunction(
+      (sel) => document.querySelectorAll(sel).length > 0,
+      nav.FOCUSABLE_SELECTOR,
+      { timeout: 8000, polling: 200 }
+    ).catch(() => {})
+  } else {
+    // Let the TVRemoteHandler plugin initialize and run its initial-focus pass.
+    await page.waitForTimeout(450)
+  }
 }
 
 // ── Tier 1: structural invariants (no server) ──────────────────────────────
@@ -138,7 +149,7 @@ test.describe('Per-route focusability audit', () => {
         if (!ok) test.skip(true, 'Server connection failed in this test instance')
       }
 
-      await BOOT(page, route.path)
+      await BOOT(page, route.path, { waitForContent: !!route.auth })
 
       const orphans = await nav.findUnreachableClickables(page)
       expect(
@@ -157,9 +168,17 @@ test.describe('Per-route focusability audit', () => {
         if (!ok) test.skip(true, 'Server connection failed in this test instance')
       }
 
-      await BOOT(page, route.path)
+      await BOOT(page, route.path, { waitForContent: !!route.auth })
 
       const count = await nav.countFocusable(page)
+
+      // Some routes (e.g. collections, playlists) may be empty on the test account.
+      // Mark them mayBeEmpty: true in routes.js to allow a graceful empty state.
+      if (route.mayBeEmpty && count === 0) {
+        test.skip(true, `${route.name} appears empty on this server — skipping focusability check`)
+        return
+      }
+
       expect(count).toBeGreaterThanOrEqual(route.minFocusable || 1)
 
       // The plugin's router.afterEach should have placed focus on visible content.
