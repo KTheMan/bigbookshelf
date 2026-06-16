@@ -17,7 +17,7 @@ const nav = require('./nav-helpers')
 
 const BOOT = async (page, path, { waitForContent = false } = {}) => {
   await page.goto(path)
-  await page.waitForLoadState('domcontentloaded')
+  await page.waitForLoadState('load') // wait for CSS so getComputedStyle is accurate
   if (waitForContent) {
     // Auth-gated pages run mounted() → attemptConnection() (IndexedDB read +
     // /api/authorize + initLibraries) which takes 1-2 s on page reload. The
@@ -26,13 +26,18 @@ const BOOT = async (page, path, { waitForContent = false } = {}) => {
     // returns early.  Wait for real content to appear, then re-run
     // setInitialFocus() explicitly — matching what afterEach does in normal
     // (non-reload) navigation where auth is already in memory.
+    //
+    // The filter here intentionally mirrors countFocusable() exactly (including
+    // the offsetParent === null check) so that whatever triggers the wait is
+    // guaranteed to be counted by the subsequent expect(count >= 1) assertion.
     await page.waitForFunction(
       (sel) => {
-        // Wait for in-viewport focusable content (excludes side-drawer which
-        // is always in DOM but CSS-translated off-screen when closed).
         const els = Array.from(document.querySelectorAll(sel))
         return els.some((el) => {
           if (el.closest('#side-drawer-panel')) return false
+          const s = window.getComputedStyle(el)
+          if (s.display === 'none' || s.visibility === 'hidden') return false
+          if (el.offsetParent === null) return false
           const r = el.getBoundingClientRect()
           return r.width > 0 && r.height > 0 &&
             r.right > 0 && r.bottom > 0 &&
@@ -40,7 +45,7 @@ const BOOT = async (page, path, { waitForContent = false } = {}) => {
         })
       },
       nav.FOCUSABLE_SELECTOR,
-      { timeout: 8000, polling: 200 }
+      { timeout: 12000, polling: 200 }
     ).catch(() => {})
     // Let Vue finish any in-flight reactive updates, then set initial focus
     // the same way router.afterEach does in real usage.
