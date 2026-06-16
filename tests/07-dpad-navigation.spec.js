@@ -20,13 +20,32 @@ const BOOT = async (page, path, { waitForContent = false } = {}) => {
   await page.waitForLoadState('domcontentloaded')
   if (waitForContent) {
     // Auth-gated pages run mounted() → attemptConnection() (IndexedDB read +
-    // /api/authorize + initLibraries) which takes 1-2 s on page reload. Wait
-    // until focusable content actually appears rather than a fixed delay.
+    // /api/authorize + initLibraries) which takes 1-2 s on page reload. The
+    // router.afterEach sets initial focus with a 150ms timer, but at that
+    // point auth hasn't loaded yet so setInitialFocus() finds nothing and
+    // returns early.  Wait for real content to appear, then re-run
+    // setInitialFocus() explicitly — matching what afterEach does in normal
+    // (non-reload) navigation where auth is already in memory.
     await page.waitForFunction(
-      (sel) => document.querySelectorAll(sel).length > 0,
+      (sel) => {
+        // Wait for in-viewport focusable content (excludes side-drawer which
+        // is always in DOM but CSS-translated off-screen when closed).
+        const els = Array.from(document.querySelectorAll(sel))
+        return els.some((el) => {
+          if (el.closest('#side-drawer-panel')) return false
+          const r = el.getBoundingClientRect()
+          return r.width > 0 && r.height > 0 &&
+            r.right > 0 && r.bottom > 0 &&
+            r.left < window.innerWidth && r.top < window.innerHeight
+        })
+      },
       nav.FOCUSABLE_SELECTOR,
       { timeout: 8000, polling: 200 }
     ).catch(() => {})
+    // Let Vue finish any in-flight reactive updates, then set initial focus
+    // the same way router.afterEach does in real usage.
+    await page.waitForTimeout(100)
+    await page.evaluate(() => window.$nuxt?.$tvRemote?.setInitialFocus())
   } else {
     // Let the TVRemoteHandler plugin initialize and run its initial-focus pass.
     await page.waitForTimeout(450)
