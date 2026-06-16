@@ -51,30 +51,52 @@ const TEST_PASS  = PRIMARY?.pass   || null
  * Navigate to /connect, fill in server credentials, and wait until the bookshelf
  * loads. Defaults to the primary server config; pass a config from SERVER_CONFIGS
  * to target a specific server.
+ *
+ * The connect form is two-step:
+ *   Step 1 — server URL input (type="url"); submitting calls /status on the server.
+ *   Step 2 — username + password; submitting calls /login.
+ * The form is also gated behind an async v-if="deviceData" and may auto-authenticate
+ * using a stored token (redirecting straight to /bookshelf without showing the form).
  */
 async function connectToServer(page, config = PRIMARY) {
   if (!config) throw new Error('No server config available')
   await page.goto('/connect')
-  await page.waitForSelector('input[type="text"], input[placeholder*="server" i], input[placeholder*="address" i], input[id*="server" i]', { timeout: 8000 })
+  await page.waitForLoadState('domcontentloaded')
 
-  // Fill server address
-  const addressInput = page.locator('input').first()
-  await addressInput.fill(config.server)
+  // If a valid session token is stored from a prior run the app auto-authenticates
+  // (ping → /api/authorize → redirect) without showing the form. Give it up to 8s.
+  const autoRedirected = await page.waitForURL('**/bookshelf**', { timeout: 8000 })
+    .then(() => true)
+    .catch(() => false)
+  if (autoRedirected) return
 
-  // Fill username
-  const usernameInput = page.locator('input[type="text"]').nth(1).or(page.locator('input[placeholder*="user" i]')).first()
-  await usernameInput.fill(config.user)
+  // No auto-redirect — we need to use the form. Wait for the form card (rendered
+  // after the async deviceData load completes).
+  await page.waitForSelector('.bg-primary', { timeout: 5000 })
 
-  // Fill password
-  const passwordInput = page.locator('input[type="password"]')
-  await passwordInput.fill(config.pass)
+  // The form may be in "server list" mode (saved configs present but auto-auth
+  // failed) instead of showing the URL input directly. In that case click the
+  // "Add New Server" button to get to Step 1.
+  const urlInput = page.locator('input[type="url"]')
+  if (!(await urlInput.isVisible().catch(() => false))) {
+    await page.locator('button').filter({ hasText: /add.new.server/i }).click()
+    await urlInput.waitFor({ state: 'visible', timeout: 5000 })
+  }
 
-  // Submit
-  await page.keyboard.press('Enter')
+  // Step 1: submit server address; the form calls /status on the server.
+  await urlInput.fill(config.server)
+  await urlInput.press('Enter')
 
-  // Wait for redirect to bookshelf — 12s; self-hosted servers can be slow but
-  // we don't want one unreachable server blocking the whole suite for 20s+.
-  await page.waitForURL('**/bookshelf**', { timeout: 12000 })
+  // Step 2: wait for credentials form (password field signals step 2 is active).
+  await page.waitForSelector('input[type="password"]', { timeout: 15000 })
+
+  // Username input has no explicit type attribute (defaults to text).
+  await page.locator('input:not([type="password"]):not([type="url"])').first().fill(config.user)
+  await page.locator('input[type="password"]').fill(config.pass)
+  await page.locator('input[type="password"]').press('Enter')
+
+  // Wait for successful login redirect to bookshelf.
+  await page.waitForURL('**/bookshelf**', { timeout: 20000 })
 }
 
 /**
