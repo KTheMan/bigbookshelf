@@ -16,20 +16,21 @@ const ROUTES = require('./routes')
 const nav = require('./nav-helpers')
 
 const BOOT = async (page, path, { waitForContent = false } = {}) => {
-  await page.goto(path)
-  await page.waitForLoadState('load') // wait for CSS so getComputedStyle is accurate
   if (waitForContent) {
-    // Auth-gated pages run mounted() → attemptConnection() (IndexedDB read +
-    // /api/authorize + initLibraries) which takes 1-2 s on page reload. The
-    // router.afterEach sets initial focus with a 150ms timer, but at that
-    // point auth hasn't loaded yet so setInitialFocus() finds nothing and
-    // returns early.  Wait for real content to appear, then re-run
-    // setInitialFocus() explicitly — matching what afterEach does in normal
-    // (non-reload) navigation where auth is already in memory.
-    //
-    // The filter here intentionally mirrors countFocusable() exactly (including
-    // the offsetParent === null check) so that whatever triggers the wait is
-    // guaranteed to be counted by the subsequent expect(count >= 1) assertion.
+    // Auth routes: use SPA navigation so auth stays in Vuex (set by connectToServer).
+    // A full page.goto() would reload and re-trigger the async auth cycle, causing
+    // LazyBookshelf / page components to mount before the user is in Vuex — they
+    // take the "no user" early-return and never load their content.  With router.push
+    // the layout stays mounted, auth is already present, and pages init correctly.
+    await page.evaluate((p) => { window.$nuxt?.$router?.push(p) }, path)
+    await page.waitForURL(`**${path}**`, { timeout: 5000 }).catch(() => {})
+  } else {
+    await page.goto(path)
+    await page.waitForLoadState('load') // wait for CSS so getComputedStyle is accurate
+  }
+  if (waitForContent) {
+    // Wait for real focusable content to appear, using the same filter as
+    // countFocusable() so the trigger element is guaranteed to be counted.
     await page.waitForFunction(
       (sel) => {
         const els = Array.from(document.querySelectorAll(sel))

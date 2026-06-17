@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div data-focusable class="cursor-pointer">
     <div :style="{ width: width + 'px', height: height + 'px' }" class="bg-primary box-shadow-book rounded-md relative overflow-hidden">
       <!-- Image or placeholder -->
       <covers-author-image :author="author" />
