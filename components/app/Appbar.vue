@@ -4,7 +4,7 @@
       <nuxt-link v-show="!showBack" to="/" class="mr-3">
         <img src="Logo.png" class="h-10 w-10" />
       </nuxt-link>
-      <a v-if="showBack" @click="back" aria-label="Back" class="rounded-full h-10 w-10 flex items-center justify-center mr-2 cursor-pointer">
+      <a v-if="showBack" @click="back" aria-label="Back" data-focusable class="rounded-full h-10 w-10 flex items-center justify-center mr-2 cursor-pointer">
         <span class="material-symbols text-3xl text-fg">arrow_back</span>
       </a>
       <div v-if="user && currentLibrary">
