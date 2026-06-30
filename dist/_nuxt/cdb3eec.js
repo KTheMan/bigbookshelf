@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[114],{988:function(e,l,n){"use strict";n.r(l);var t={components:{BbCollectionDetailPage:n(912).default}},o=n(9),component=Object(o.a)(t,function(){return(0,this._self._c)("bb-collection-detail-page")},[],!1,null,null,null);l.default=component.exports;installComponents(component,{BbCollectionDetailPage:n(912).default})}}]);

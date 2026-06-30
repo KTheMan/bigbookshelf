@@ -1,7 +1,7 @@
 {
   "id": "com.bigbookshelf.tv",
-  "version": "0.13.3",
-  "vendor": "KTheMan",
+  "version": "0.14.0",
+  "vendor": "bigbookshelf",
   "type": "web",
   "main": "index.html",
   "title": "Bigbookshelf",
@@ -18,8 +18,8 @@
   "disableBackHistoryAPI": false,
   "splashBackground": "assets/splash.png",
   "transparent": false,
-  "bgColor": "#1a1a1a",
+  "bgColor": "#232323",
   "supportsAudioGuidance": false,
   "accessible": false,
   "inAppPurchase": false
-} 
+}

@@ -6,7 +6,7 @@ export default {
   telemetry: false,
   env: {
     PROD: '1',
-    SMARTTV_APP: '1'
+    WEBOS_APP: '1'
   },
 
   publicRuntimeConfig: {
@@ -16,24 +16,19 @@ export default {
   head: {
     title: 'Bigbookshelf',
     htmlAttrs: {
-      lang: 'en',
-      'data-platform': 'webos'
+      lang: 'en'
     },
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=1920, height=1080, user-scalable=no' },
-      { hid: 'description', name: 'description', content: 'Bigbookshelf (BBS) - Audiobookshelf client for LG webOS TV' },
+      { hid: 'description', name: 'description', content: 'Bigbookshelf - Self-hosted audiobook and podcast client for LG webOS TV' },
       { name: 'format-detection', content: 'telephone=no' }
     ],
-    script: [
-      {
-        src: 'libs/sortable.js'
-      }
-    ],
-    link: [{ rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' }]
+    script: [],
+    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }]
   },
 
-  css: ['@/assets/tailwind.css', '@/assets/app.css', '@/assets/webos.css', '@/assets/tizen.css'],
+  css: ['@/assets/tailwind.css', '@/assets/app.css', '@/assets/webos.css'],
 
   plugins: [
     '@/plugins/webos/polyfills.js',
@@ -58,74 +53,19 @@ export default {
 
   axios: {},
 
-  hooks: {
-    'generate:page'(page) {
-      // webOS loads apps via file:// so absolute paths like /_nuxt/ resolve
-      // to the filesystem root instead of the app directory. Strip <base href>
-      // and rewrite /_nuxt/ script srcs to relative paths.
-      page.html = page.html
-        .replace(/<base[^>]*href="[^"]*"[^>]*>/i, '')
-        .replace(/(<script[^>]+src=")\/(_nuxt\/)/g, '$1./$2')
-        .replace(/(<link[^>]+href=")\/(_nuxt\/)/g, '$1./$2')
-    },
-    async 'generate:done'(generator) {
-      // Nuxt's webpack builder strips leading './' from publicPath (converts
-      // './_nuxt/' to '/_nuxt/'), so the webpack runtime always has an absolute
-      // publicPath that breaks file:// loads on webOS. Patch it here to './_nuxt/'.
-      const fs = require('fs')
-      const path = require('path')
-      const nuxtDir = path.join(generator.distPath, '_nuxt')
-      const files = fs.readdirSync(nuxtDir).filter(f => f.endsWith('.js') && !f.endsWith('.worker.js'))
-      let patched = 0
-      for (const file of files) {
-        const fp = path.join(nuxtDir, file)
-        const src = fs.readFileSync(fp, 'utf8')
-        // Only the webpack runtime has o.p="/_nuxt/" or similar single-assignment
-        if (src.includes('.p="/_nuxt/"')) {
-          const fixed = src.replace(/\.p="\/(_nuxt\/)"/g, '.p="./$1"')
-          if (fixed !== src) {
-            fs.writeFileSync(fp, fixed)
-            patched++
-          }
-        }
-      }
-      console.log(`[webOS] Patched webpack publicPath in ${patched} file(s)`)
-    }
-  },
-
   build: {
+    // Use relative publicPath so assets load via file:// on webOS
     publicPath: './_nuxt/',
-    // Use stable filenames (no content hashes) so pulls overwrite the same
-    // files instead of leaving stale chunks alongside newly-named ones.
-    // HTTP caching is irrelevant for a file:// webOS app.
-    filenames: {
-      app: '[name].js',
-      chunk: '[name].js',
-      css: '[name].css',
-      img: 'img/[name].[ext]',
-      font: 'fonts/[name].[ext]',
-      video: 'video/[name].[ext]'
-    },
     postcss: {
       postcssOptions: {
         plugins: {
           tailwindcss: {},
-          autoprefixer: {},
-          'postcss-custom-properties': { preserve: true }
+          autoprefixer: {}
         }
       }
     },
     babel: {
-      presets: [
-        ['@babel/preset-env', {
-          targets: { chrome: '38' },
-          useBuiltIns: false
-        }]
-      ],
-      plugins: [
-        ['@babel/plugin-transform-optional-chaining', { loose: true }],
-        ['@babel/plugin-proposal-private-property-in-object', { loose: true }]
-      ]
+      plugins: [['@babel/plugin-proposal-private-property-in-object', { loose: true }]]
     },
     extend(config) {
       const stubs = __dirname + '/plugins/webos/capacitor-stubs'
@@ -151,8 +91,20 @@ export default {
     fallback: true
   },
 
+  hooks: {
+    'generate:done'(generator) {
+      // Fix base href for webOS file:// protocol — absolute paths break asset loading
+      const fs = require('fs')
+      const path = require('path')
+      const indexPath = path.join(generator.distPath, 'index.html')
+      let html = fs.readFileSync(indexPath, 'utf8')
+      html = html.replace('<base href="/">', '<base href="./">')
+      fs.writeFileSync(indexPath, html)
+      console.log('[webOS] Fixed <base href> for file:// protocol')
+    }
+  },
+
   router: {
-    base: '/',
-    mode: 'hash'
+    base: '/'
   }
 }

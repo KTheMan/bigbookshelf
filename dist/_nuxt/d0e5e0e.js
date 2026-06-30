@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[109],{972:function(t,e,n){"use strict";n.r(e);var l={components:{BbLatestPage:n(906).default}},o=n(9),component=Object(o.a)(l,function(){return(0,this._self._c)("bb-latest-page")},[],!1,null,null,null);e.default=component.exports;installComponents(component,{BbLatestPage:n(906).default})}}]);
