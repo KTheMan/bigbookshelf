@@ -20,21 +20,21 @@ async function shot(page, name) {
 }
 
 test('connect page', async ({ page }) => {
-  await page.goto('/connect')
+  await page.goto('/#/connect')
   await page.waitForLoadState('domcontentloaded')
   await activateTV(page)
   await shot(page, '01-connect')
 })
 
 test('bookshelf (unauthenticated)', async ({ page }) => {
-  await page.goto('/bookshelf')
+  await page.goto('/#/bookshelf')
   await page.waitForLoadState('networkidle')
   await activateTV(page)
   await shot(page, '02-bookshelf-unauth')
 })
 
 test('bookshelf navbar tabs', async ({ page }) => {
-  await page.goto('/bookshelf')
+  await page.goto('/#/bookshelf')
   await page.waitForLoadState('domcontentloaded')
   await activateTV(page)
   await page.keyboard.press('Tab')
@@ -42,7 +42,7 @@ test('bookshelf navbar tabs', async ({ page }) => {
 })
 
 test('appbar focus ring', async ({ page }) => {
-  await page.goto('/bookshelf')
+  await page.goto('/#/bookshelf')
   await page.waitForLoadState('domcontentloaded')
   await activateTV(page)
   await page.keyboard.press('Tab')
@@ -51,7 +51,7 @@ test('appbar focus ring', async ({ page }) => {
 })
 
 test('connect page — form focused', async ({ page }) => {
-  await page.goto('/connect')
+  await page.goto('/#/connect')
   await page.waitForLoadState('domcontentloaded')
   await activateTV(page)
   await page.keyboard.press('Tab')

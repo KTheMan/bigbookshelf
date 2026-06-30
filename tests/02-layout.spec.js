@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test')
 
 test.describe('TV layout and design language', () => {
   test('app bar is present and full-width on /connect (blank layout)', async ({ page }) => {
-    await page.goto('/connect')
+    await page.goto('/#/connect')
     // Blank layout has no appbar - page should show the logo directly
     await expect(page.locator('img[src="/Logo.png"]')).toBeVisible()
   })

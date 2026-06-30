@@ -72,14 +72,6 @@ class TVRemoteHandler {
   handleFocusin(event) {
     const el = event.target
     if (!el || el === this.focusedElement) return
-    // If the drawer is open and focus escapes it (e.g. via Tab), close the drawer
-    const store = window.$nuxt?.$store
-    if (store?.state.showSideDrawer) {
-      const panel = document.getElementById('side-drawer-panel')
-      if (panel && !panel.contains(el)) {
-        store.commit('setShowSideDrawer', false)
-      }
-    }
     // Keep webos-focused in sync with native browser focus
     el.classList.add('webos-focused')
     document.querySelectorAll('.webos-focused').forEach((prev) => {
@@ -243,9 +235,11 @@ class TVRemoteHandler {
     const store = window.$nuxt?.$store
     const drawerOpen = store?.state.showSideDrawer
 
-    // Drawer is on the right side — pressing Left while it's open closes it
-    if (drawerOpen && direction === 'left') {
+    // The redesign uses a left navigation rail. While expanded, pressing Right
+    // exits the rail and restores focus to the page content.
+    if (drawerOpen && direction === 'right') {
       store.commit('setShowSideDrawer', false)
+      setTimeout(() => this.setInitialFocus(), 40)
       return
     }
 
@@ -357,12 +351,6 @@ class TVRemoteHandler {
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-focusable]'
       )
     ).filter((el) => {
-      // The side drawer is a layout-level overlay that is ALWAYS in the DOM
-      // (translated off-screen when closed). Unless we're explicitly scoped to
-      // it (root === the panel), never let global navigation or initial-focus
-      // land inside it — otherwise focus gets stranded on a hidden drawer link
-      // after it closes and the panel reads as "stuck open".
-      if (!root && el.closest('#side-drawer-panel')) return false
       const style = window.getComputedStyle(el)
       if (style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null) return false
       const rect = el.getBoundingClientRect()
@@ -581,10 +569,15 @@ class TVRemoteHandler {
 
   setInitialFocus() {
     const appbar = document.getElementById('appbar')
+    const sidebar = document.getElementById('side-drawer-panel')
     const all = this.getFocusableElements()
     // Prefer content elements (not appbar) — pick the one with the smallest
     // top position in the viewport so we land at the top of the page content.
-    const content = all.filter(el => !appbar || !appbar.contains(el))
+    const content = all.filter(el => {
+      if (appbar && appbar.contains(el)) return false
+      if (sidebar && sidebar.contains(el)) return false
+      return true
+    })
     const pool = content.length ? content : all
     if (!pool.length) return
     const topmost = pool.reduce((best, el) => {

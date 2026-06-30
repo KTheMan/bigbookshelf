@@ -6,7 +6,7 @@ const { test, expect } = require('@playwright/test')
 
 test.describe('AudioPlayerTV component', () => {
   test('progress bars respond to prop values', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     // Inject a minimal test: check that the AudioPlayerTV template uses inline styles
@@ -36,7 +36,7 @@ test.describe('AudioPlayerTV component', () => {
   })
 
   test('progress bar CSS does not have hardcoded 60% width', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
 
     // Check all stylesheets for the hardcoded 60% that we fixed
     const hasHardcodedWidth = await page.evaluate(() => {

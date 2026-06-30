@@ -7,7 +7,7 @@ const { test, expect } = require('@playwright/test')
 
 test.describe('Bookshelf home (offline / unauthenticated)', () => {
   test('shows empty state with Connect button when not authenticated', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     // App should render the empty bookshelf state
     await page.waitForLoadState('networkidle')
     // Either a loading spinner or the empty state / connect button should be visible
@@ -17,7 +17,7 @@ test.describe('Bookshelf home (offline / unauthenticated)', () => {
   })
 
   test('bookshelf navbar renders with home link', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
     // Home nav link should be present
     const homeLink = page.locator('a[href="/bookshelf"]')
@@ -25,7 +25,7 @@ test.describe('Bookshelf home (offline / unauthenticated)', () => {
   })
 
   test('bookshelf page has correct page title', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     const title = await page.title()
     expect(title.toLowerCase()).toContain('audiobookshelf')
   })
@@ -33,7 +33,7 @@ test.describe('Bookshelf home (offline / unauthenticated)', () => {
 
 test.describe('Bookshelf shelves layout', () => {
   test('book cards are reasonably wide for a TV viewport (≥180px)', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('networkidle')
 
     // If there are book cards on screen, they should be wide enough for TV

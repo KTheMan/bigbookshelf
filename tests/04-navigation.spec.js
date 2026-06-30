@@ -6,7 +6,7 @@ const { test, expect } = require('@playwright/test')
 
 test.describe('TVRemoteHandler keyboard navigation', () => {
   test('arrow keys move focus between focusable elements', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     // Tab to first focusable element
@@ -21,11 +21,11 @@ test.describe('TVRemoteHandler keyboard navigation', () => {
   })
 
   test('Enter key activates the focused element', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
-    // Focus the home link in the nav bar
-    const homeLink = page.locator('a[href="/bookshelf"]').first()
+    // Focus the home link in the navigation rail
+    const homeLink = page.locator('a[href="#/bookshelf"]').first()
     await homeLink.focus()
     await expect(homeLink).toBeFocused()
 
@@ -37,7 +37,7 @@ test.describe('TVRemoteHandler keyboard navigation', () => {
 
   test('Escape key emits webos-media-key back event when no history is available', async ({ page }) => {
     // Use a fresh page with no history so back() falls through to emitMediaKey
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     // Override history.length to simulate no back history
@@ -58,7 +58,7 @@ test.describe('TVRemoteHandler keyboard navigation', () => {
   })
 
   test('MediaPlayPause key emits playPause media event', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     const eventFired = await page.evaluate(() => {
@@ -74,7 +74,7 @@ test.describe('TVRemoteHandler keyboard navigation', () => {
   })
 
   test('webos-focused class is applied to focused element', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     // Focus first link using Tab
@@ -84,5 +84,20 @@ test.describe('TVRemoteHandler keyboard navigation', () => {
       return document.querySelector('.webos-focused') !== null
     })
     expect(hasFocusedClass).toBe(true)
+  })
+
+  test('navigation rail opens from the topbar toggle and keeps focus available', async ({ page }) => {
+    await page.goto('/#/bookshelf')
+    await page.waitForLoadState('domcontentloaded')
+
+    const sidebar = page.locator('#side-drawer-panel')
+    await expect(sidebar).toBeVisible()
+    await expect(sidebar).not.toHaveClass(/bb-tv-sidebar-expanded/)
+
+    await page.locator('#appbar button[aria-label="Toggle navigation"]').click()
+    await expect(sidebar).toHaveClass(/bb-tv-sidebar-expanded/)
+
+    const focusableCount = await page.locator('#side-drawer-panel a[href], #side-drawer-panel button').count()
+    expect(focusableCount).toBeGreaterThan(1)
   })
 })

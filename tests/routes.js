@@ -13,14 +13,14 @@
  *                 when the page is in its loaded state. Defaults to 1.
  */
 module.exports = [
-  { path: '/connect', name: 'Connect', auth: false, minFocusable: 1 },
-  { path: '/bookshelf', name: 'Bookshelf (library)', auth: true, minFocusable: 1 },
-  { path: '/bookshelf/series', name: 'Series', auth: true },
-  { path: '/bookshelf/collections', name: 'Collections', auth: true },
-  { path: '/bookshelf/playlists', name: 'Playlists', auth: true },
-  { path: '/bookshelf/authors', name: 'Authors', auth: true },
-  { path: '/settings', name: 'Settings', auth: true, minFocusable: 5 },
-  { path: '/stats', name: 'Stats', auth: true },
-  { path: '/account', name: 'Account', auth: true },
-  { path: '/logs', name: 'Logs', auth: false }
+  { path: '/#/connect', name: 'Connect', auth: false, minFocusable: 1 },
+  { path: '/#/bookshelf', name: 'Bookshelf (library)', auth: true, minFocusable: 1 },
+  { path: '/#/bookshelf/series', name: 'Series', auth: true },
+  { path: '/#/bookshelf/collections', name: 'Collections', auth: true },
+  { path: '/#/bookshelf/playlists', name: 'Playlists', auth: true },
+  { path: '/#/bookshelf/authors', name: 'Authors', auth: true },
+  { path: '/#/settings', name: 'Settings', auth: true, minFocusable: 5 },
+  { path: '/#/stats', name: 'Stats', auth: true },
+  { path: '/#/account', name: 'Account', auth: true },
+  { path: '/#/logs', name: 'Logs', auth: false }
 ]

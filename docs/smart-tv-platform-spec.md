@@ -21,9 +21,12 @@ Nuxt must remain configured for a static client bundle:
 - `ssr: false`
 - `target: 'static'`
 - `modern: false`
+- `router.mode: 'hash'`
 - `build.publicPath: './_nuxt/'`
 - `browserslist: ["Chrome >= 38"]`
 - `build.transpile`: include dependencies that publish modern syntax but can be loaded on TV, currently `vue-toastification`, `socket.io-client`, `engine.io-client`, `engine.io-parser`, `socket.io-parser`, `@socket.io/component-emitter`, `component-emitter`, `epubjs`, `xmldom`, `@teckel/vue-pdf`, `pdfjs-dist`, and `libarchive.js`.
+
+Packaged TV apps must launch through `dist/index.html` and route client-side to `/#/bookshelf`. Do not depend on direct generated deep-route HTML files for launch or in-app navigation; some TV runtimes surface Nuxt fallback pages as native "could not load page" screens before client navigation settles.
 
 The generated HTML must work under packaged app file origins. Every generated `.html` file needs:
 

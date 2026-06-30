@@ -1,10 +1,12 @@
 <template>
-  <div class="w-full layout-wrapper bg-bg">
-    <app-appbar />
-    <div id="content" class="overflow-hidden relative" :class="isPlayerOpen ? 'playerOpen' : ''">
-      <Nuxt :key="currentLang" />
-    </div>
+  <div class="w-full layout-wrapper bg-bg bb-tv-layout">
     <app-side-drawer />
+    <div class="bb-tv-main-shell">
+      <app-appbar />
+      <div id="content" class="overflow-hidden relative" :class="isPlayerOpen ? 'playerOpen' : ''">
+        <Nuxt :key="currentLang" />
+      </div>
+    </div>
     <app-audio-player-container ref="streamContainer" />
     <modals-libraries-modal />
     <modals-playlists-add-create-modal />

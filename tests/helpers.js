@@ -54,7 +54,7 @@ const TEST_PASS  = PRIMARY?.pass   || null
  */
 async function connectToServer(page, config = PRIMARY) {
   if (!config) throw new Error('No server config available')
-  await page.goto('/connect')
+  await page.goto('/#/connect')
   await page.waitForSelector('input[type="text"], input[placeholder*="server" i], input[placeholder*="address" i], input[id*="server" i]', { timeout: 8000 })
 
   // Fill server address

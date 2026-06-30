@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[121],{931:function(t,n,e){"use strict";e.r(n);var l={asyncData:function(t){return(0,t.redirect)("/bookshelf")},data:function(){return{}},computed:{},methods:{}},c=e(8),component=Object(c.a)(l,function(){return(0,this._self._c)("div",{staticClass:"w-full h-full"})},[],!1,null,null,null);n.default=component.exports}}]);

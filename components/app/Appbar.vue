@@ -1,41 +1,38 @@
 <template>
-  <div class="w-full bg-primary relative z-20" :class="$platform === 'webos' ? 'h-20' : 'h-16'">
-    <div id="appbar" class="absolute top-0 left-0 w-full h-full flex items-center px-2">
-      <nuxt-link v-show="!showBack" to="/" class="mr-3">
-        <img src="Logo.png" class="h-10 w-10" />
-      </nuxt-link>
-      <a v-if="showBack" @click="back" aria-label="Back" class="rounded-full h-10 w-10 flex items-center justify-center mr-2 cursor-pointer">
-        <span class="material-symbols text-3xl text-fg">arrow_back</span>
-      </a>
-      <div v-if="user && currentLibrary">
-        <button type="button" aria-label="Show library modal" class="pl-1.5 pr-2.5 py-2 bg-bg bg-opacity-30 rounded-md flex items-center" @click="clickShowLibraryModal">
-          <ui-library-icon :icon="currentLibraryIcon" :size="4" font-size="base" />
-          <p class="text-sm leading-4 ml-2 mt-0.5 max-w-24 truncate">{{ currentLibraryName }}</p>
-        </button>
+  <header id="appbar" class="bb-tv-topbar">
+    <div class="bb-tv-title-block">
+      <button v-if="showBack" type="button" aria-label="Back" class="bb-tv-back-btn" @click="back">
+        <span class="material-symbols">arrow_back</span>
+        <span>Back</span>
+      </button>
+      <div v-else>
+        <p class="bb-tv-eyebrow">{{ sectionLabel }}</p>
+        <h1 class="bb-tv-title">{{ pageTitle }}</h1>
       </div>
+    </div>
+
+    <div class="bb-tv-topbar-actions">
+      <button v-if="user && currentLibrary" type="button" aria-label="Show library modal" class="bb-tv-library-pill" @click="clickShowLibraryModal">
+        <ui-library-icon :icon="currentLibraryIcon" :size="5" font-size="base" />
+        <span>{{ currentLibraryName }}</span>
+      </button>
 
       <widgets-connection-indicator />
-
-      <div class="flex-grow" />
-
       <widgets-download-progress-indicator />
 
-      <!-- Must be connected to a server to cast, only supports media items on server -->
-      <button type="button" aria-label="Cast" v-show="isCastAvailable && user" class="mx-2 cursor-pointer flex items-center" @click="castClick">
-        <span class="material-symbols text-2xl leading-none">
-          {{ isCasting ? 'cast_connected' : 'cast' }}
-        </span>
+      <button type="button" aria-label="Cast" v-show="isCastAvailable && user" class="bb-tv-icon-btn" @click="castClick">
+        <span class="material-symbols">{{ isCasting ? 'cast_connected' : 'cast' }}</span>
       </button>
 
-      <nuxt-link v-if="user" class="mx-1.5 flex items-center h-10" to="/search" aria-label="Search">
-        <span class="material-symbols text-2xl leading-none">search</span>
+      <nuxt-link v-if="user" class="bb-tv-icon-btn" to="/search" aria-label="Search">
+        <span class="material-symbols">search</span>
       </nuxt-link>
 
-      <button type="button" aria-label="Toggle side drawer" class="h-7 mx-1.5" @click="clickShowSideDrawer">
-        <span class="material-symbols" style="font-size: 1.75rem">menu</span>
+      <button type="button" aria-label="Toggle navigation" class="bb-tv-icon-btn bb-tv-icon-btn-primary" @click="clickShowSideDrawer">
+        <span class="material-symbols">{{ showSideDrawer ? 'menu_open' : 'menu' }}</span>
       </button>
     </div>
-  </div>
+  </header>
 </template>
 
 <script>
@@ -56,6 +53,9 @@ export default {
         this.$store.commit('setCastAvailable', val)
       }
     },
+    showSideDrawer() {
+      return this.$store.state.showSideDrawer
+    },
     currentLibrary() {
       return this.$store.getters['libraries/getCurrentLibrary']
     },
@@ -66,17 +66,35 @@ export default {
       return this.currentLibrary?.icon || 'database'
     },
     showBack() {
-      if (!this.$route.name) return true
+      if (!this.$route.name) return false
       return this.$route.name !== 'index' && !this.$route.name.startsWith('bookshelf')
     },
     user() {
       return this.$store.state.user.user
     },
-    username() {
-      return this.user?.username || 'err'
-    },
     isCasting() {
       return this.$store.state.isCasting
+    },
+    pageTitle() {
+      const routeName = this.$route.name || ''
+      if (routeName === 'bookshelf') return 'Home'
+      if (routeName === 'bookshelf-library') return this.$strings.ButtonLibrary || 'Library'
+      if (routeName === 'bookshelf-series') return this.$strings.ButtonSeries || 'Series'
+      if (routeName === 'bookshelf-collections') return this.$strings.ButtonCollections || 'Collections'
+      if (routeName === 'bookshelf-authors') return this.$strings.ButtonAuthors || 'Authors'
+      if (routeName === 'bookshelf-playlists') return this.$strings.ButtonPlaylists || 'Playlists'
+      if (routeName === 'bookshelf-latest') return this.$strings.ButtonLatest || 'Latest'
+      if (routeName === 'search') return this.$strings.ButtonSearch || 'Search'
+      if (routeName === 'settings') return this.$strings.HeaderSettings || 'Settings'
+      if (routeName === 'stats') return this.$strings.ButtonUserStats || 'Stats'
+      if (routeName === 'account') return this.$strings.HeaderAccount || 'Account'
+      if (routeName === 'logs') return this.$strings.ButtonLogs || 'Logs'
+      if (routeName === 'connect') return this.$strings.ButtonConnectToServer || 'Connect'
+      return 'Bigbookshelf'
+    },
+    sectionLabel() {
+      if (!this.user) return 'Offline library'
+      return this.currentLibraryName || 'Bigbookshelf'
     }
   },
   methods: {
@@ -88,7 +106,7 @@ export default {
       AbsAudioPlayer.requestSession()
     },
     clickShowSideDrawer() {
-      this.$store.commit('setShowSideDrawer', true)
+      this.$store.commit('setShowSideDrawer', !this.showSideDrawer)
     },
     clickShowLibraryModal() {
       this.$store.commit('libraries/setShowModal', true)
@@ -112,51 +130,118 @@ export default {
 }
 </script>
 
-<style>
-#appbar {
-  box-shadow: 0px 5px 5px #11111155;
+<style scoped>
+.bb-tv-topbar {
+  height: 96px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px 0 36px;
+  background: #202123;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  z-index: 20;
 }
-.loader-dots div {
-  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+
+.bb-tv-title-block {
+  min-width: 0;
 }
-.loader-dots div:nth-child(1) {
-  left: 0px;
-  animation: loader-dots1 0.6s infinite;
+
+.bb-tv-eyebrow {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.loader-dots div:nth-child(2) {
-  left: 0px;
-  animation: loader-dots2 0.6s infinite;
+
+.bb-tv-title {
+  color: #ffffff;
+  font-size: 36px;
+  line-height: 42px;
+  font-weight: 700;
 }
-.loader-dots div:nth-child(3) {
-  left: 10px;
-  animation: loader-dots2 0.6s infinite;
+
+.bb-tv-topbar-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
-.loader-dots div:nth-child(4) {
-  left: 20px;
-  animation: loader-dots3 0.6s infinite;
+
+.bb-tv-topbar-actions > * + * {
+  margin-left: 14px;
 }
-@keyframes loader-dots1 {
-  0% {
-    transform: scale(0);
-  }
-  100% {
-    transform: scale(1);
-  }
+
+.bb-tv-library-pill,
+.bb-tv-icon-btn,
+.bb-tv-back-btn {
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 2px solid transparent;
+  cursor: pointer;
+  outline: none;
 }
-@keyframes loader-dots3 {
-  0% {
-    transform: scale(1);
-  }
-  100% {
-    transform: scale(0);
-  }
+
+.bb-tv-library-pill {
+  max-width: 300px;
+  padding: 0 22px;
+  font-size: 18px;
+  font-weight: 600;
 }
-@keyframes loader-dots2 {
-  0% {
-    transform: translate(0, 0);
-  }
-  100% {
-    transform: translate(10px, 0);
-  }
+
+.bb-tv-library-pill > * + * {
+  margin-left: 12px;
+}
+
+.bb-tv-library-pill span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-tv-icon-btn {
+  width: 56px;
+}
+
+.bb-tv-icon-btn .material-symbols {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.bb-tv-icon-btn-primary {
+  color: #111315;
+  background: #1ad691;
+}
+
+.bb-tv-back-btn {
+  padding: 0 24px 0 18px;
+  color: #111315;
+  background: #1ad691;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bb-tv-back-btn .material-symbols {
+  font-size: 28px;
+  margin-right: 8px;
+}
+
+.bb-tv-library-pill:focus,
+.bb-tv-library-pill.webos-focused,
+.bb-tv-icon-btn:focus,
+.bb-tv-icon-btn.webos-focused,
+.bb-tv-back-btn:focus,
+.bb-tv-back-btn.webos-focused {
+  border-color: #1ad691;
+  box-shadow: 0 0 0 4px rgba(26, 214, 145, 0.24);
 }
 </style>

@@ -9,7 +9,7 @@ const ACCENT_GREEN = '#1ad691'
 
 test.describe('Design language: colours and typography', () => {
   test('accent color #1ad691 is defined in app CSS', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     const hasAccentDefined = await page.evaluate(() => {
@@ -43,7 +43,7 @@ test.describe('Design language: colours and typography', () => {
   })
 
   test('Source Sans Pro font is loaded and applied', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     const bodyFont = await page.evaluate(() => {
@@ -53,7 +53,7 @@ test.describe('Design language: colours and typography', () => {
   })
 
   test('base font size is ≥18px for TV readability', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     const htmlFontSize = await page.evaluate(() => {
@@ -65,7 +65,7 @@ test.describe('Design language: colours and typography', () => {
   })
 
   test('dark background is applied to the app root', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     const bgColor = await page.locator('.layout-wrapper, body').first().evaluate((el) => {
@@ -82,7 +82,7 @@ test.describe('Design language: colours and typography', () => {
 
 test.describe('Design language: TV-scale layout', () => {
   test('appbar height is appropriate for TV (≥60px)', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     const appbarHeight = await page.locator('#appbar').evaluate((el) => el.offsetHeight).catch(() => null)
@@ -92,7 +92,7 @@ test.describe('Design language: TV-scale layout', () => {
   })
 
   test('focus outline CSS rule for webos platform uses accent green', async ({ page }) => {
-    await page.goto('/bookshelf')
+    await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
     // Check that the CSS definition for webOS focus uses accent green

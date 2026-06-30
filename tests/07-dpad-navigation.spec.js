@@ -26,7 +26,7 @@ const BOOT = async (page, path) => {
 
 test.describe('D-pad spatial navigation (controlled DOM)', () => {
   test.beforeEach(async ({ page }) => {
-    await BOOT(page, '/bookshelf')
+    await BOOT(page, '/#/bookshelf')
     // Ensure the handler is present before we drive it.
     const ready = await page.evaluate(() => !!window.$nuxt?.$tvRemote)
     expect(ready, 'TVRemoteHandler should be injected as $nuxt.$tvRemote').toBe(true)
@@ -86,7 +86,7 @@ test.describe('D-pad spatial navigation (controlled DOM)', () => {
 
 test.describe('Focusability audit self-check', () => {
   test('flags a clickable element with no focusable self/ancestor/descendant', async ({ page }) => {
-    await BOOT(page, '/bookshelf')
+    await BOOT(page, '/#/bookshelf')
     await page.evaluate(() => {
       const d = document.createElement('div')
       d.id = 'orphan-clickable'
@@ -101,7 +101,7 @@ test.describe('Focusability audit self-check', () => {
   })
 
   test('does NOT flag a clickable element that is itself focusable', async ({ page }) => {
-    await BOOT(page, '/bookshelf')
+    await BOOT(page, '/#/bookshelf')
     await page.evaluate(() => {
       const d = document.createElement('div')
       d.id = 'ok-clickable'
@@ -177,9 +177,9 @@ test.describe('Per-route focusability audit', () => {
 // servers are configured (CI with no secrets) the loop body never executes.
 
 const KEY_AUTH_ROUTES = [
-  { path: '/bookshelf/library', name: 'Library' },
-  { path: '/bookshelf/collections', name: 'Collections' },
-  { path: '/bookshelf/series', name: 'Series' }
+  { path: '/#/bookshelf/library', name: 'Library' },
+  { path: '/#/bookshelf/collections', name: 'Collections' },
+  { path: '/#/bookshelf/series', name: 'Series' }
 ]
 
 for (const config of SERVER_CONFIGS) {

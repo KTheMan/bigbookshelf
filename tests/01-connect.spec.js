@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test')
 
 test.describe('Connect page', () => {
   test('renders the connect form with logo and GitHub link', async ({ page }) => {
-    await page.goto('/connect')
+    await page.goto('/#/connect')
 
     // Logo image is present
     await expect(page.locator('img[src="/Logo.png"]')).toBeVisible()
@@ -21,7 +21,7 @@ test.describe('Connect page', () => {
   })
 
   test('shows a server connection form', async ({ page }) => {
-    await page.goto('/connect')
+    await page.goto('/#/connect')
 
     // There should be at least one input (server address)
     const inputs = page.locator('input')
@@ -29,8 +29,8 @@ test.describe('Connect page', () => {
   })
 
   test('redirects to / when back arrow is clicked', async ({ page }) => {
-    await page.goto('/connect')
-    const backLink = page.locator('a[href="/"]').first()
+    await page.goto('/#/connect')
+    const backLink = page.locator('a[href="#/"]').first()
     await expect(backLink).toBeVisible()
   })
 })
