@@ -10,6 +10,7 @@ class TVRemoteHandler {
     // Key-hold tracking (event.repeat not reliable on webOS 3 / Chromium 38)
     this._heldKeys = new Set()
     this._upHoldTimer = null
+    this._tizenKeysRegistered = false
   }
 
   log(...args) {
@@ -17,6 +18,7 @@ class TVRemoteHandler {
   }
 
   init() {
+    this.registerTizenRemoteKeys()
     this._keydownHandler = this.handleKeydown.bind(this)
     this._keyupHandler = this.handleKeyup.bind(this)
     this._focusinHandler = this.handleFocusin.bind(this)
@@ -24,6 +26,40 @@ class TVRemoteHandler {
     document.addEventListener('keyup', this._keyupHandler)
     document.addEventListener('focusin', this._focusinHandler)
     this.log('Initialized')
+  }
+
+  registerTizenRemoteKeys() {
+    if (this._tizenKeysRegistered || typeof window === 'undefined') return
+    const inputDevice = window.tizen?.tvinputdevice
+    if (!inputDevice) return
+
+    const keys = [
+      'MediaPlayPause',
+      'MediaPlay',
+      'MediaPause',
+      'MediaStop',
+      'MediaFastForward',
+      'MediaRewind',
+      'MediaTrackNext',
+      'MediaTrackPrevious',
+      'ColorF0Red',
+      'ColorF1Green',
+      'ColorF2Yellow',
+      'ColorF3Blue',
+      'ChannelUp',
+      'ChannelDown'
+    ]
+
+    try {
+      if (typeof inputDevice.registerKeyBatch === 'function') {
+        inputDevice.registerKeyBatch(keys)
+      } else if (typeof inputDevice.registerKey === 'function') {
+        keys.forEach((keyName) => inputDevice.registerKey(keyName))
+      }
+      this._tizenKeysRegistered = true
+    } catch (error) {
+      console.warn('[TVRemote] Failed to register Tizen remote keys', error)
+    }
   }
 
   destroy() {
@@ -54,7 +90,7 @@ class TVRemoteHandler {
 
   handleKeydown(event) {
     if (!this.enabled) return
-    const key = event.key || event.keyCode
+    const key = event.key && event.key !== 'Unidentified' ? event.key : event.keyCode
 
     this.log('Keydown:', key)
 
@@ -110,63 +146,82 @@ class TVRemoteHandler {
       case 'Back':
       case 'XF86Back':
       case 8:
+      case 461:
+      case 10009:
         event.preventDefault()
         this.handleBack()
         break
       case 'MediaPlayPause':
       case 'PlayPause':
+      case 10252:
         event.preventDefault()
         this.emitMediaKey('playPause')
         break
       case 'MediaTrackNext':
       case 'MediaFastForward':
       case 'XF86AudioNext':
+      case 417:
+      case 10233:
         event.preventDefault()
         this.emitMediaKey('next')
         break
       case 'MediaTrackPrevious':
       case 'MediaRewind':
       case 'XF86AudioPrev':
+      case 412:
+      case 10232:
         event.preventDefault()
         this.emitMediaKey('previous')
         break
       case 'ColorRed':
       case 'Red':
       case 'ColorF0Red':
+      case 403:
         this.emitColorKey('red')
         break
       case 'ColorGreen':
       case 'Green':
       case 'ColorF1Green':
+      case 404:
         this.emitColorKey('green')
         break
       case 'ColorYellow':
       case 'Yellow':
       case 'ColorF2Yellow':
+      case 405:
         this.emitColorKey('yellow')
         break
       case 'ColorBlue':
       case 'Blue':
       case 'ColorF3Blue':
+      case 406:
         this.emitColorKey('blue')
         break
       case 'ChannelUp':
+      case 427:
         event.preventDefault()
         this.emitMediaKey('seekForward')
         break
       case 'ChannelDown':
+      case 428:
         event.preventDefault()
         this.emitMediaKey('seekBackward')
         break
       case 'Play':
+      case 'MediaPlay':
+      case 415:
         event.preventDefault()
         this.emitMediaKey('playPause')
         break
       case 'Pause':
+      case 'MediaPause':
+      case 19:
         event.preventDefault()
         this.emitMediaKey('pause')
         break
       case 'Stop':
+      case 'MediaStop':
+      case 413:
         event.preventDefault()
         this.emitMediaKey('stop')
         break
@@ -174,7 +229,7 @@ class TVRemoteHandler {
   }
 
   handleKeyup(event) {
-    const key = event.key || event.keyCode
+    const key = event.key && event.key !== 'Unidentified' ? event.key : event.keyCode
     this._heldKeys.delete(key)
     if (key === 'ArrowUp' || key === 'Up' || key === 38) {
       if (this._upHoldTimer) {

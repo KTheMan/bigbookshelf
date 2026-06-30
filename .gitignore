@@ -4,5 +4,7 @@ ipk/
 .output/
 test-results/
 playwright-report/
+*.ipk
+*.wgt
 *.log
 .DS_Store

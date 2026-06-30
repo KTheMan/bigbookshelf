@@ -4,7 +4,7 @@
 $wslProject = "/home/ahero4heor/audiobookshelf-webos"
 
 Write-Host "Building in WSL..." -ForegroundColor Cyan
-wsl -d Ubuntu -- bash -c "cd $wslProject && node node_modules/.bin/nuxt generate 2>&1 | tail -8"
+wsl -d Ubuntu -- bash -c "cd $wslProject && npm run build 2>&1 | tail -12"
 
 if ($LASTEXITCODE -ne 0) {
   Write-Host "Build failed." -ForegroundColor Red

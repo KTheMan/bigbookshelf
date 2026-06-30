@@ -30,19 +30,15 @@ jobs:
         run: npm install
 
       - name: Generate static build
-        run: npx nuxt generate
+        run: npm run build
+
+      - name: Verify Smart TV static output
+        run: node scripts/verify-tv-dist.js
 
       # ── webOS (LG) ──────────────────────────────────────────────────────────
 
       - name: Install webOS CLI (ares-package)
         run: npm install -g @webosose/ares-cli
-
-      - name: Prepare webOS app directory
-        run: |
-          cp appinfo.json dist/
-          cp assets/icon.png dist/assets/
-          cp assets/largeIcon.png dist/assets/
-          cp assets/splash.png dist/assets/
 
       - name: Package webOS IPK
         run: |
@@ -68,8 +64,14 @@ jobs:
 
       - name: Package Tizen WGT
         run: |
-          cp tizen/config.xml dist/
-          cd dist && zip -r ../bigbookshelf-tizen.wgt . && cd ..
+          if command -v tizen >/dev/null 2>&1; then
+            tizen package -t wgt -- dist
+            WGT_PATH="$(find . -maxdepth 2 -name '*.wgt' | head -1)"
+            mv "$WGT_PATH" bigbookshelf-tizen.wgt
+          else
+            echo "::warning::Tizen CLI is not installed in this runner; creating an unsigned layout archive for CI only."
+            cd dist && zip -r ../bigbookshelf-tizen.wgt . && cd ..
+          fi
 
       - name: Upload Tizen WGT artifact
         uses: actions/upload-artifact@v4

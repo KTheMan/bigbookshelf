@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[128],{981:function(e,n,t){"use strict";t.r(n);var l={components:{BbSearchPage:t(908).default}},c=t(9),component=Object(c.a)(l,function(){return(0,this._self._c)("bb-search-page")},[],!1,null,null,null);n.default=component.exports;installComponents(component,{BbSearchPage:t(908).default})}}]);

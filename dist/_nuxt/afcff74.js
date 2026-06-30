@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[129],{982:function(n,t,e){"use strict";e.r(t);var l={components:{BbSettingsPage:e(909).default}},o=e(9),component=Object(o.a)(l,function(){return(0,this._self._c)("bb-settings-page")},[],!1,null,null,null);t.default=component.exports;installComponents(component,{BbSettingsPage:e(909).default})}}]);

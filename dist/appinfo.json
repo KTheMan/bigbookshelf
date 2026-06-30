@@ -1,10 +1,11 @@
 {
   "id": "com.bigbookshelf.tv",
-  "version": "0.14.0",
-  "vendor": "bigbookshelf",
+  "version": "0.13.3",
+  "vendor": "KTheMan",
   "type": "web",
   "main": "index.html",
   "title": "Bigbookshelf",
+  "appDescription": "Audiobookshelf client for Smart TVs",
   "icon": "assets/icon.png",
   "largeIcon": "assets/largeIcon.png",
   "uiRevision": 2,
@@ -14,11 +15,12 @@
     "audio"
   ],
   "requiredMemory": 50,
-  "handlesRelaunch": true,
+  "handlesRelaunch": false,
   "disableBackHistoryAPI": false,
   "splashBackground": "assets/splash.png",
   "transparent": false,
-  "bgColor": "#232323",
+  "bgColor": "#1a1a1a",
+  "iconColor": "#1a1a1a",
   "supportsAudioGuidance": false,
   "accessible": false,
   "inAppPurchase": false

@@ -109,7 +109,9 @@ tizen install -n /tmp/bigbookshelf-tizen.wgt -t <device-id>
 ### Prerequisites
 
 - Node.js 18+
-- Docker (for builds) or the webOS TV SDK
+- Docker (for static builds)
+- LG webOS CLI (`ares-package`) for IPK packaging
+- Tizen Studio CLI plus a certificate profile for signed WGT packaging
 
 ### Local Development
 
@@ -123,21 +125,39 @@ npm run dev
 
 ### Building
 
-**Using Docker (recommended):**
+The Smart TV platform requirements are documented in [docs/smart-tv-platform-spec.md](docs/smart-tv-platform-spec.md).
+
+**Static build:**
+
+```bash
+npm run build
+npm run verify:tv
+```
+
+`npm run build` runs `nuxt generate`. Nuxt's generate hook writes the webOS and Tizen manifests, copies TV package assets, and rewrites generated HTML so the app loads correctly from packaged `file://` origins.
+
+**Using Docker:**
 
 ```bash
 docker build --network=host -t audiobookshelf-webos-builder .
 ```
 
-**Using the webOS TV SDK:**
+**Package for LG webOS:**
 
 ```bash
-npm run build
+npm run package:webos
 ```
 
-Both methods produce:
+**Package for Samsung Tizen:**
+
+```bash
+npm run package:tizen
+```
+
+Build outputs:
 - `dist/` — Static web files ready for deployment
-- `bigbookshelf-webos.ipk` — Installable package for webOS TVs
+- `ipk/*.ipk` — Installable package for webOS TVs after `npm run package:webos`
+- `*.wgt` — Signed Tizen package after `npm run package:tizen`
 
 ### Project Structure
 
@@ -166,8 +186,14 @@ audiobookshelf-webos/
 ├── static/                 # Static files served as-is
 ├── store/                  # Vuex store modules
 ├── strings/                # i18n translation files
+├── docs/
+│   └── smart-tv-platform-spec.md # webOS/Tizen compatibility contract
+├── scripts/
+│   ├── prepare-tv-dist.js  # Nuxt generate hook for package-ready dist/
+│   └── verify-tv-dist.js   # Build output checks for TV packages
 ├── appinfo.json            # webOS app manifest
 ├── nuxt.config.js          # Nuxt configuration
+├── tv.platform.config.js   # Shared webOS/Tizen app identity and manifests
 ├── tailwind.config.js      # Tailwind CSS configuration
 └── Dockerfile              # Docker build environment
 ```
@@ -189,9 +215,10 @@ The app uses custom webOS plugins that replace Capacitor native APIs:
 ### Building for Older webOS Versions
 
 The app targets webOS 3.0+ via:
-- **Browserslist**: `Samsung >= 3`, `Chrome >= 38`, `Safari >= 6`
+- **Browserslist**: `Chrome >= 38`
 - **Babel transpilation**: ES6+ → ES5 (arrow functions, async/await, template literals, etc.)
 - **Runtime polyfills**: Map, URL, Promise, Array.from, crypto.getRandomValues, btoa
+- **Capacitor stubs**: `@capacitor/core` and mobile plugins resolve to TV-safe browser shims
 
 ### CI/CD
 
