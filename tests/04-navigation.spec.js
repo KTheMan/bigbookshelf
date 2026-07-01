@@ -20,18 +20,20 @@ test.describe('TVRemoteHandler keyboard navigation', () => {
     expect(secondActive).toBeTruthy()
   })
 
-  test('Enter key activates the focused element', async ({ page }) => {
+  test('Enter key activates the focused navigation toggle', async ({ page }) => {
     await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
 
-    // Focus the home link in the navigation rail
-    const homeLink = page.locator('a[href="#/bookshelf"]').first()
-    await homeLink.focus()
-    await expect(homeLink).toBeFocused()
+    const sidebar = page.locator('#side-drawer-panel')
+    await expect(sidebar).not.toHaveClass(/bb-tv-sidebar-expanded/)
 
-    // Enter should navigate (same page in this case, no error)
+    const toggle = page.locator('#appbar button[aria-label="Toggle navigation"]')
+    await toggle.focus()
+    await expect(toggle).toBeFocused()
+
     await page.keyboard.press('Enter')
-    // Should remain on bookshelf
+
+    await expect(sidebar).toHaveClass(/bb-tv-sidebar-expanded/)
     await expect(page).toHaveURL(/\/bookshelf/)
   })
 
@@ -96,6 +98,12 @@ test.describe('TVRemoteHandler keyboard navigation', () => {
 
     await page.locator('#appbar button[aria-label="Toggle navigation"]').click()
     await expect(sidebar).toHaveClass(/bb-tv-sidebar-expanded/)
+    await expect
+      .poll(() => page.evaluate(() => {
+        const panel = document.getElementById('side-drawer-panel')
+        return !!panel && panel.contains(document.activeElement)
+      }))
+      .toBe(true)
 
     const focusableCount = await page.locator('#side-drawer-panel a[href], #side-drawer-panel button').count()
     expect(focusableCount).toBeGreaterThan(1)

@@ -19,7 +19,7 @@
         @click="clickShowLibraryModal"
       >
         <span class="material-symbols fill">menu_book</span>
-        <span>Books</span>
+        <span>Audiobooks</span>
       </button>
       <div class="bb-tv-library-divider" />
       <button
@@ -131,7 +131,15 @@ export default {
       AbsAudioPlayer.requestSession()
     },
     clickShowSideDrawer() {
-      this.$store.commit('setShowSideDrawer', !this.showSideDrawer)
+      const nextOpen = !this.showSideDrawer
+      this.$store.commit('setShowSideDrawer', nextOpen)
+      if (nextOpen) {
+        this.$nextTick(() => {
+          setTimeout(() => {
+            if (this.$tvRemote?.focusDrawer) this.$tvRemote.focusDrawer()
+          }, 120)
+        })
+      }
     },
     clickShowLibraryModal() {
       this.$store.commit('libraries/setShowModal', true)

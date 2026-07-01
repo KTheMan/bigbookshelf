@@ -71,9 +71,13 @@ test.describe('Connect page', () => {
     await page.waitForTimeout(450)
 
     await expect(page.locator('#connect-address')).toHaveValue('http://studio.local:13378')
+    await expect(page.locator('.bb-connect-server-row').first()).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator('.bb-connect-server-remove').first()).toBeVisible()
+    await expect(page.locator('.bb-connect-server-remove').first()).toHaveAttribute('data-tv-skip', '')
     await page.keyboard.press('ArrowDown')
 
     await expect(page.locator('#connect-address')).toHaveValue('https://cabin.example.com')
+    await expect(page.locator('.bb-connect-server-row').nth(1)).toHaveAttribute('aria-pressed', 'true')
     const active = await page.evaluate(() => ({
       tag: document.activeElement?.tagName,
       row: document.activeElement?.classList.contains('bb-connect-server-row') || false,

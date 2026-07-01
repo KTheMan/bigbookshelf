@@ -30,6 +30,7 @@
             tabindex="-1"
             role="button"
             :aria-label="`Use ${server.name || defaultServerName(server.address)}`"
+            :aria-pressed="focusedServerId === server.id ? 'true' : 'false'"
             @click="selectServer(server)"
             @focus="selectServer(server, { silent: true })"
           >
@@ -37,6 +38,16 @@
               <div class="bb-connect-server-name">{{ server.name || defaultServerName(server.address) }}</div>
               <div class="bb-connect-server-address">{{ server.address }}</div>
             </div>
+            <button
+              type="button"
+              class="bb-connect-server-remove"
+              data-tv-skip
+              tabindex="-1"
+              aria-label="Remove server"
+              @click.stop="removeServer(server)"
+            >
+              ✕
+            </button>
           </li>
         </ul>
 
@@ -440,7 +451,7 @@ export default {
   gap: 12px;
   height: 48px;
   padding: 0 16px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 2px solid transparent;
   box-sizing: border-box;
   outline: none;
@@ -480,6 +491,21 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.bb-connect-server-remove {
+  width: 16px;
+  height: 24px;
+  border: 0;
+  padding: 0;
+  flex-shrink: 0;
+  color: #a0a6ac;
+  background: transparent;
+  font-size: 18px;
+  line-height: 23px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
 }
 
 .bb-connect-add-server {
