@@ -11,7 +11,7 @@
 
 // MUST stay in sync with TVRemoteHandler.getFocusableElements()
 const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-focusable]'
+  'a[href], button:not([disabled]), input:not([disabled]):not([data-tv-skip]), select:not([disabled]):not([data-tv-skip]), textarea:not([disabled]):not([data-tv-skip]), [tabindex]:not([tabindex="-1"]), [data-focusable]'
 
 /**
  * Audit the current page for "orphan" clickable regions — elements the design

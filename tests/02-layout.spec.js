@@ -1,10 +1,11 @@
 const { test, expect } = require('@playwright/test')
 
 test.describe('TV layout and design language', () => {
-  test('app bar is present and full-width on /connect (blank layout)', async ({ page }) => {
+  test('connect uses the blank TV login layout without the appbar', async ({ page }) => {
     await page.goto('/#/connect')
-    // Blank layout has no appbar - page should show the logo directly
-    await expect(page.locator('img[src="/Logo.png"]')).toBeVisible()
+    // Blank layout has no appbar - page should show the Figma login mark directly.
+    await expect(page.locator('#appbar')).toHaveCount(0)
+    await expect(page.locator('.bb-connect-logo svg')).toBeVisible()
   })
 
   test('main layout has correct background color (audiobookshelf dark theme)', async ({ page }) => {

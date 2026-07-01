@@ -11,6 +11,8 @@
     --tw-border-opacity: 1;
     --tw-ring-opacity: 1;
     --tw-placeholder-opacity: 1;
+    --font-sans: 'Source Sans Pro', Arial, Helvetica, sans-serif;
+    --font-mono: 'Ubuntu Mono', Consolas, 'Courier New', monospace;
     --color-bg: 56, 56, 56;
     --color-bg-hover: 102, 104, 107;
     --color-fg: 230, 237, 243;

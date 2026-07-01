@@ -16,18 +16,22 @@ test.describe('Bookshelf home (offline / unauthenticated)', () => {
     expect(hasConnect || hasLoading).toBeTruthy()
   })
 
-  test('bookshelf navbar renders with home link', async ({ page }) => {
+  test('bookshelf drawer renders with home link', async ({ page }) => {
     await page.goto('/#/bookshelf')
     await page.waitForLoadState('domcontentloaded')
-    // Home nav link should be present
-    const homeLink = page.locator('a[href="/bookshelf"]')
+
+    await page.locator('#appbar button[aria-label="Toggle navigation"]').click()
+    await expect(page.locator('#side-drawer-panel')).toHaveClass(/bb-tv-sidebar-expanded/)
+
+    // Home nav link should be present in the redesigned right-side drawer.
+    const homeLink = page.locator('#side-drawer-panel a[href="#/bookshelf"]')
     await expect(homeLink.first()).toBeVisible()
   })
 
   test('bookshelf page has correct page title', async ({ page }) => {
     await page.goto('/#/bookshelf')
     const title = await page.title()
-    expect(title.toLowerCase()).toContain('audiobookshelf')
+    expect(title.toLowerCase()).toContain('bigbookshelf')
   })
 })
 

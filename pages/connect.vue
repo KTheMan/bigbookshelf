@@ -17,7 +17,7 @@
       <div class="bb-connect-spacer" />
 
       <!-- Saved servers card -->
-      <div class="bb-connect-card">
+      <div class="bb-connect-card bb-connect-card--servers">
         <p class="bb-connect-eyebrow">SAVED SERVERS</p>
 
         <ul class="bb-connect-servers">
@@ -26,14 +26,17 @@
             :key="server.id"
             class="bb-connect-server-row"
             :class="{ 'bb-connect-server-row-active': focusedServerId === server.id }"
+            data-focusable
+            tabindex="-1"
+            role="button"
+            :aria-label="`Use ${server.name || defaultServerName(server.address)}`"
+            @click="selectServer(server)"
+            @focus="selectServer(server, { silent: true })"
           >
             <div class="bb-connect-server-meta">
               <div class="bb-connect-server-name">{{ server.name || defaultServerName(server.address) }}</div>
               <div class="bb-connect-server-address">{{ server.address }}</div>
             </div>
-            <button type="button" class="bb-connect-server-remove" aria-label="Remove server" @click="removeServer(server)">
-              ✕
-            </button>
           </li>
         </ul>
 
@@ -46,58 +49,116 @@
       <div class="bb-connect-spacer" />
 
       <!-- Sign in card -->
-      <div class="bb-connect-card">
+      <div class="bb-connect-card bb-connect-card--signin">
         <p class="bb-connect-eyebrow">SIGN IN</p>
 
         <form @submit.prevent="submit">
           <div class="bb-connect-field">
-            <label class="bb-connect-label">Server Address</label>
-            <input
-              v-model="address"
-              type="text"
-              class="bb-connect-input"
-              :class="{ 'bb-connect-input-active': addressFocused, 'bb-connect-input-error': addressError }"
-              placeholder="http://192.168.1.100:13378"
-              @focus="addressFocused = true"
-              @blur="addressFocused = false"
-            />
+            <label class="bb-connect-label" for="connect-address">Server Address</label>
+            <div
+              ref="addressControl"
+              class="bb-connect-input-control"
+              :class="inputControlClass('address', { error: addressError })"
+              data-focusable
+              data-tv-input-control
+              tabindex="-1"
+              role="button"
+              aria-label="Edit server address"
+              @focus="focusedField = 'address'"
+              @click="activateInput('address')"
+            >
+              <input
+                id="connect-address"
+                ref="addressInput"
+                v-model="address"
+                type="text"
+                class="bb-connect-input"
+                data-tv-skip
+                tabindex="-1"
+                placeholder="http://192.168.1.100:13378"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="none"
+                @focus="beginEditing('address')"
+                @blur="endEditing('address')"
+                @keydown.enter.prevent="finishEditing('address')"
+                @keydown.esc.prevent="finishEditing('address')"
+                @keydown.stop
+              />
+            </div>
             <p v-if="addressError" class="bb-connect-field-error">{{ addressError }}</p>
           </div>
 
           <div class="bb-connect-row">
             <div class="bb-connect-field">
-              <label class="bb-connect-label">Username</label>
-              <input
-                v-model="username"
-                type="text"
-                class="bb-connect-input"
-                :class="{ 'bb-connect-input-active': usernameFocused }"
-                @focus="usernameFocused = true"
-                @blur="usernameFocused = false"
-              />
+              <label class="bb-connect-label" for="connect-username">Username</label>
+              <div
+                ref="usernameControl"
+                class="bb-connect-input-control"
+                :class="inputControlClass('username')"
+                data-focusable
+                data-tv-input-control
+                tabindex="-1"
+                role="button"
+                aria-label="Edit username"
+                @focus="focusedField = 'username'"
+                @click="activateInput('username')"
+              >
+                <input
+                  id="connect-username"
+                  ref="usernameInput"
+                  v-model="username"
+                  type="text"
+                  class="bb-connect-input"
+                  data-tv-skip
+                  tabindex="-1"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="none"
+                  @focus="beginEditing('username')"
+                  @blur="endEditing('username')"
+                  @keydown.enter.prevent="finishEditing('username')"
+                  @keydown.esc.prevent="finishEditing('username')"
+                  @keydown.stop
+                />
+              </div>
             </div>
             <div class="bb-connect-field">
-              <label class="bb-connect-label">Password</label>
-              <input
-                v-model="password"
-                type="password"
-                class="bb-connect-input"
-                :class="{ 'bb-connect-input-active': passwordFocused }"
-                @focus="passwordFocused = true"
-                @blur="passwordFocused = false"
-              />
+              <label class="bb-connect-label" for="connect-password">Password</label>
+              <div
+                ref="passwordControl"
+                class="bb-connect-input-control"
+                :class="inputControlClass('password')"
+                data-focusable
+                data-tv-input-control
+                tabindex="-1"
+                role="button"
+                aria-label="Edit password"
+                @focus="focusedField = 'password'"
+                @click="activateInput('password')"
+              >
+                <input
+                  id="connect-password"
+                  ref="passwordInput"
+                  v-model="password"
+                  type="password"
+                  class="bb-connect-input"
+                  data-tv-skip
+                  tabindex="-1"
+                  autocomplete="current-password"
+                  @focus="beginEditing('password')"
+                  @blur="endEditing('password')"
+                  @keydown.enter.prevent="finishEditing('password')"
+                  @keydown.esc.prevent="finishEditing('password')"
+                  @keydown.stop
+                />
+              </div>
             </div>
           </div>
 
           <div class="bb-connect-form-footer">
-            <label class="bb-connect-remember">
-              <div class="bb-connect-checkbox" :class="{ 'bb-connect-checkbox-checked': remember }" @click="remember = !remember">
-                <span v-if="remember" class="material-symbols" style="font-size:16px;color:rgb(var(--color-primary))">check</span>
-              </div>
-              <span>Remember me</span>
-            </label>
             <button type="submit" class="bb-connect-signin-btn" :disabled="loading">
-              {{ loading ? 'SIGNING IN…' : 'SIGN IN' }}
+              {{ loading ? 'SIGNING IN...' : 'SIGN IN' }}
             </button>
           </div>
 
@@ -119,11 +180,9 @@ export default {
       address: '',
       username: '',
       password: '',
-      remember: true,
       loading: false,
-      addressFocused: false,
-      usernameFocused: false,
-      passwordFocused: false,
+      focusedField: null,
+      editingField: null,
       addressError: '',
       errorMessage: '',
       savedServers: [],
@@ -157,11 +216,55 @@ export default {
         return address
       }
     },
+    inputControlClass(field, options = {}) {
+      return {
+        'bb-connect-input-control-active': this.focusedField === field || this.editingField === field,
+        'bb-connect-input-control-editing': this.editingField === field,
+        'bb-connect-input-control-error': !!options.error
+      }
+    },
+    selectServer(server, options = {}) {
+      this.focusedServerId = server.id
+      this.address = server.address || ''
+      this.username = server.username || ''
+      this.password = server.password || ''
+      if (!options.silent) this.focusedField = null
+    },
     addNewServer() {
       this.address = ''
       this.username = ''
       this.password = ''
       this.focusedServerId = null
+      this.focusedField = 'address'
+      this.$nextTick(() => {
+        if (this.$tvRemote && this.$refs.addressControl) this.$tvRemote.setFocus(this.$refs.addressControl)
+      })
+    },
+    activateInput(field) {
+      this.focusedField = field
+      this.editingField = field
+      this.$nextTick(() => {
+        const input = this.$refs[`${field}Input`]
+        if (!input) return
+        input.focus()
+      })
+    },
+    beginEditing(field) {
+      this.focusedField = field
+      this.editingField = field
+    },
+    endEditing(field) {
+      if (this.editingField === field) this.editingField = null
+    },
+    finishEditing(field) {
+      const input = this.$refs[`${field}Input`]
+      const control = this.$refs[`${field}Control`]
+      if (input) input.blur()
+      this.focusedField = field
+      this.editingField = null
+      this.$nextTick(() => {
+        if (this.$tvRemote && control) this.$tvRemote.setFocus(control)
+      })
     },
     async removeServer(server) {
       const updated = this.savedServers.filter((s) => s.id !== server.id)
@@ -223,46 +326,61 @@ export default {
 .bb-connect {
   width: 1920px;
   height: 1080px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgb(var(--color-primary));
+  position: relative;
+  background-color: #232323;
   overflow: hidden;
+  font-family: var(--font-sans);
+}
+
+.bb-connect [data-focusable].webos-focused,
+.bb-connect [data-focusable]:focus,
+.bb-connect button.webos-focused,
+.bb-connect button:focus {
+  transform: none !important;
 }
 
 .bb-connect-center {
+  position: absolute;
+  left: 480px;
+  top: 80px;
   width: 960px;
+  height: 920px;
+  overflow: visible;
+}
+
+.bb-connect-brand {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 960px;
+  height: 225px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0;
-  max-height: 920px;
-  overflow: hidden;
-}
-
-.bb-connect-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
 }
 
 .bb-connect-logo {
   width: 120px;
   height: 120px;
+  flex: 0 0 120px;
 }
 
 .bb-connect-title {
   font-size: 42px;
+  line-height: 50px;
   font-weight: 700;
-  color: rgb(var(--color-fg));
-  margin: 0;
+  color: #e6edf3;
+  margin: 22px 0 0;
+  letter-spacing: 0;
 }
 
 .bb-connect-subtitle {
   font-size: 16px;
-  color: rgb(var(--color-fg-muted));
-  margin: 0;
+  line-height: 19px;
+  color: #a0a6ac;
+  margin: 12px 0 0;
+  letter-spacing: 0;
 }
 
 .bb-connect-spacer {
@@ -273,20 +391,34 @@ export default {
 /* Cards */
 .bb-connect-card {
   width: 720px;
-  background-color: rgb(var(--color-secondary));
+  position: absolute;
+  left: 120px;
+  background-color: #2f3030;
   border-radius: 12px;
   padding: 24px 32px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.bb-connect-card--servers {
+  top: 265px;
+  height: 290px;
+}
+
+.bb-connect-card--signin {
+  top: 595px;
+  height: 320px;
 }
 
 .bb-connect-eyebrow {
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 16px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  color: rgb(var(--color-fg-muted));
+  letter-spacing: 2px;
+  color: #a0a6ac;
   margin: 0;
 }
 
@@ -297,7 +429,9 @@ export default {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 8px;
+  max-height: 164px;
+  overflow: hidden;
 }
 
 .bb-connect-server-row {
@@ -305,15 +439,20 @@ export default {
   align-items: center;
   gap: 12px;
   height: 48px;
-  padding: 12px 16px;
-  border-radius: 6px;
+  padding: 0 16px;
+  border-radius: 8px;
   border: 2px solid transparent;
   box-sizing: border-box;
+  outline: none;
+  cursor: pointer;
 }
 
-.bb-connect-server-row-active {
-  background-color: rgb(var(--color-bg));
-  border-color: rgb(var(--color-accent));
+.bb-connect-server-row-active,
+.bb-connect-server-row.webos-focused,
+.bb-connect-server-row:focus {
+  background-color: #383838;
+  border-color: transparent;
+  box-shadow: inset 0 0 0 2px #1ad691 !important;
 }
 
 .bb-connect-server-meta {
@@ -326,8 +465,9 @@ export default {
 
 .bb-connect-server-name {
   font-size: 15px;
+  line-height: 18px;
   font-weight: 600;
-  color: rgb(var(--color-fg));
+  color: #e6edf3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -335,22 +475,11 @@ export default {
 
 .bb-connect-server-address {
   font-size: 13px;
-  color: rgb(var(--color-fg-muted));
+  line-height: 16px;
+  color: #a0a6ac;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.bb-connect-server-remove {
-  font-size: 18px;
-  font-weight: 700;
-  color: rgb(var(--color-fg-muted));
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
-  outline: none;
 }
 
 .bb-connect-add-server {
@@ -359,15 +488,24 @@ export default {
   justify-content: center;
   gap: 8px;
   height: 48px;
-  border: 1px dashed rgb(var(--color-border));
-  border-radius: 6px;
-  background: none;
-  color: rgb(var(--color-fg));
+  margin-top: auto;
+  border: 1px dashed #4b5559;
+  border-radius: 8px;
+  background: transparent;
+  color: #e6edf3;
   font-size: 13px;
+  line-height: 16px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.8px;
   cursor: pointer;
   outline: none;
+  box-sizing: border-box;
+}
+
+.bb-connect-add-server.webos-focused,
+.bb-connect-add-server:focus {
+  border-color: #1ad691;
+  background-color: #383838;
 }
 
 /* Sign in form */
@@ -381,37 +519,59 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .bb-connect-label {
   font-size: 13px;
+  line-height: 16px;
   font-weight: 600;
-  color: rgb(var(--color-fg));
+  color: #e6edf3;
+}
+
+.bb-connect-input-control {
+  height: 50px;
+  padding: 0 16px;
+  background-color: #383838;
+  border: 1px solid #4b5559;
+  border-radius: 8px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  outline: none;
+}
+
+.bb-connect-input-control-active,
+.bb-connect-input-control.webos-focused,
+.bb-connect-input-control:focus {
+  border-color: transparent;
+  box-shadow: inset 0 0 0 2px #1ad691 !important;
+}
+
+.bb-connect-input-control-editing {
+  background-color: #3f4040;
+}
+
+.bb-connect-input-control-error {
+  border-color: rgb(var(--color-error));
 }
 
 .bb-connect-input {
-  height: 50px;
-  padding: 0 16px;
-  background-color: rgb(var(--color-bg));
-  color: rgb(var(--color-fg));
-  border: 1px solid rgb(var(--color-border));
-  border-radius: 6px;
+  width: 100%;
+  height: 48px;
+  padding: 0;
+  background-color: transparent;
+  color: #e6edf3;
+  border: 0;
   font-family: var(--font-sans);
   font-size: 16px;
+  line-height: 20px;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.15s ease-out;
 }
 
-.bb-connect-input-active,
-.bb-connect-input:focus {
-  border-width: 2px;
-  border-color: rgb(var(--color-accent));
-}
-
-.bb-connect-input-error {
-  border-color: rgb(var(--color-error));
+.bb-connect-input::placeholder {
+  color: #a0a6ac;
 }
 
 .bb-connect-field-error {
@@ -430,50 +590,29 @@ export default {
 .bb-connect-form-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-}
-
-.bb-connect-remember {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: rgb(var(--color-fg));
-  cursor: pointer;
-  user-select: none;
-}
-
-.bb-connect-checkbox {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  background-color: transparent;
-  border: 2px solid rgb(var(--color-border));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.bb-connect-checkbox-checked {
-  background-color: rgb(var(--color-accent));
-  border-color: rgb(var(--color-accent));
+  justify-content: flex-end;
+  margin-top: 3px;
 }
 
 .bb-connect-signin-btn {
   width: 131px;
   height: 46px;
-  background-color: rgb(var(--color-accent));
-  color: rgb(var(--color-primary));
+  background-color: #1ad691;
+  color: #232323;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-family: var(--font-sans);
   font-size: 14px;
+  line-height: 18px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 1px;
   cursor: pointer;
   outline: none;
+}
+
+.bb-connect-signin-btn.webos-focused,
+.bb-connect-signin-btn:focus {
+  box-shadow: inset 0 0 0 2px #e6edf3 !important;
 }
 
 .bb-connect-signin-btn:disabled {
@@ -488,7 +627,11 @@ export default {
 }
 
 .bb-connect-footer {
-  margin-top: 24px;
+  position: absolute;
+  left: 120px;
+  top: 939px;
+  width: 720px;
+  margin: 0;
   font-size: 12px;
   color: rgb(var(--color-fg-muted));
   text-align: center;

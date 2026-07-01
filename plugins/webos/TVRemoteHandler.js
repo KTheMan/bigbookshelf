@@ -84,6 +84,14 @@ class TVRemoteHandler {
 
     this.log('Keydown:', key)
 
+    if (this._isTextEditingTarget(event.target || document.activeElement)) {
+      if (this._isBackKey(key) || key === 'Enter' || key === 13) {
+        event.preventDefault()
+        this._returnFocusFromInput(event.target || document.activeElement)
+      }
+      return
+    }
+
     const isHeld = this._heldKeys.has(key)
 
     switch (key) {
@@ -351,9 +359,10 @@ class TVRemoteHandler {
     }
     return Array.from(
       container.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-focusable]'
+        'a[href], button:not([disabled]), input:not([disabled]):not([data-tv-skip]), select:not([disabled]):not([data-tv-skip]), textarea:not([disabled]):not([data-tv-skip]), [tabindex]:not([tabindex="-1"]), [data-focusable]'
       )
     ).filter((el) => {
+      if (el.hasAttribute('data-tv-skip')) return false
       if (!root && !window.$nuxt?.$store?.state.showSideDrawer && el.closest('#side-drawer-panel')) return false
       const style = window.getComputedStyle(el)
       if (style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null) return false
@@ -469,6 +478,31 @@ class TVRemoteHandler {
     const tag = el.tagName
     if (tag === 'A') return el.hasAttribute('href')
     return tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA'
+  }
+
+  _isTextEditingTarget(el) {
+    if (!el) return false
+    if (el.isContentEditable) return true
+    const tag = el.tagName
+    if (tag === 'TEXTAREA') return true
+    if (tag !== 'INPUT') return false
+    const type = (el.getAttribute('type') || 'text').toLowerCase()
+    return !['button', 'checkbox', 'color', 'file', 'hidden', 'image', 'radio', 'range', 'reset', 'submit'].includes(type)
+  }
+
+  _isBackKey(key) {
+    return key === 'Escape' || key === 'Back' || key === 'XF86Back' || key === 8 || key === 461 || key === 10009
+  }
+
+  _returnFocusFromInput(input) {
+    if (!input) return
+    const proxy = input.closest('[data-tv-input-control]')
+    try {
+      input.blur()
+    } catch (error) {
+      this.log('Unable to blur text input', error)
+    }
+    if (proxy) this.setFocus(proxy)
   }
 
   activateFocused() {
