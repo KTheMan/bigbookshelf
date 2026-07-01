@@ -14,7 +14,7 @@ export default {
   },
   computed: {
     hideToolbar() {
-      return this.isHome || this.isLatest || this.isPodcastSearch
+      return this.isLatest || this.isPodcastSearch
     },
     isHome() {
       return this.$route.name === 'bookshelf'
@@ -47,7 +47,17 @@ html[data-platform='webos'] .main-content {
   max-height: calc(100% - 56px);
   min-height: calc(100% - 56px);
 }
+html[data-platform='tizen'] .main-content {
+  height: calc(100% - 56px);
+  max-height: calc(100% - 56px);
+  min-height: calc(100% - 56px);
+}
 html[data-platform='webos'] .main-content.no-toolbar {
+  height: 100%;
+  max-height: 100%;
+  min-height: 100%;
+}
+html[data-platform='tizen'] .main-content.no-toolbar {
   height: 100%;
   max-height: 100%;
   min-height: 100%;

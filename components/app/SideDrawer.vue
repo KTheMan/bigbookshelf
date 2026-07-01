@@ -1,55 +1,53 @@
 <template>
-  <nav
-    id="side-drawer-panel"
-    class="bb-tv-sidebar"
-    :class="{ 'bb-tv-sidebar-expanded': show }"
-    aria-label="Primary navigation"
-    @focusin="expand"
-    @mouseenter="expand"
-  >
-    <button type="button" class="bb-tv-sidebar-brand" aria-label="Toggle navigation" @click="toggle">
-      <img src="Logo.png" alt="" />
-      <span>Bigbookshelf</span>
-    </button>
+  <div class="bb-tv-sidebar-root" :class="{ 'bb-tv-sidebar-root-open': show }">
+    <button v-show="show" type="button" class="bb-tv-sidebar-scrim" aria-label="Close navigation" @click="collapse" />
+    <nav
+      id="side-drawer-panel"
+      class="bb-tv-sidebar"
+      :class="{ 'bb-tv-sidebar-expanded': show }"
+      :aria-hidden="!show"
+      aria-label="Primary navigation"
+    >
+      <div class="bb-tv-sidebar-header">
+        <p class="bb-tv-sidebar-welcome">Welcome, {{ displayName }}</p>
+        <p class="bb-tv-sidebar-email">{{ displayEmail }}</p>
+      </div>
 
-    <div class="bb-tv-sidebar-items">
-      <template v-for="item in navItems">
-        <button
-          v-if="item.action"
-          :key="item.text"
-          type="button"
-          class="bb-tv-sidebar-item"
-          :title="item.text"
-          @click="clickAction(item.action)"
-        >
-          <span class="material-symbols" :class="{ fill: !item.iconOutlined }">{{ item.icon }}</span>
-          <span class="bb-tv-sidebar-label">{{ item.text }}</span>
-        </button>
-        <nuxt-link
-          v-else
-          :key="item.text"
-          :to="item.to"
-          class="bb-tv-sidebar-item"
-          :class="{ 'bb-tv-sidebar-item-active': isActive(item) }"
-          :title="item.text"
-          @click.native="collapse"
-        >
-          <span v-if="item.iconPack === 'abs-icons'" class="abs-icons" :class="`icon-${item.icon}`" />
-          <span v-else class="material-symbols" :class="{ fill: !item.iconOutlined }">{{ item.icon }}</span>
-          <span class="bb-tv-sidebar-label">{{ item.text }}</span>
-        </nuxt-link>
-      </template>
-    </div>
+      <div class="bb-tv-sidebar-items">
+        <template v-for="item in navItems">
+          <button
+            v-if="item.action"
+            :key="item.text"
+            type="button"
+            class="bb-tv-sidebar-item"
+            :title="item.text"
+            @click="clickAction(item.action)"
+          >
+            <span class="material-symbols" :class="{ fill: !item.iconOutlined }">{{ item.icon }}</span>
+            <span class="bb-tv-sidebar-label">{{ item.text }}</span>
+          </button>
+          <nuxt-link
+            v-else
+            :key="item.text"
+            :to="item.to"
+            class="bb-tv-sidebar-item"
+            :class="{ 'bb-tv-sidebar-item-active': isActive(item) }"
+            :title="item.text"
+            @click.native="collapse"
+          >
+            <span v-if="item.iconPack === 'abs-icons'" class="abs-icons" :class="`icon-${item.icon}`" />
+            <span v-else class="material-symbols" :class="{ fill: !item.iconOutlined }">{{ item.icon }}</span>
+            <span class="bb-tv-sidebar-label">{{ item.text }}</span>
+          </nuxt-link>
+        </template>
+      </div>
 
-    <div class="bb-tv-sidebar-footer">
-      <p v-if="serverConnectionConfig" class="bb-tv-sidebar-server">{{ serverConnectionConfig.address }}</p>
-      <button v-if="user" type="button" class="bb-tv-sidebar-disconnect" @click="disconnect">
-        <span class="material-symbols">cloud_off</span>
-        <span class="bb-tv-sidebar-label">{{ $strings.ButtonDisconnect }}</span>
-      </button>
-      <p class="bb-tv-sidebar-version">{{ $config.version }}</p>
-    </div>
-  </nav>
+      <div class="bb-tv-sidebar-footer">
+        <p v-if="serverConnectionConfig" class="bb-tv-sidebar-server">{{ serverConnectionConfig.address }}</p>
+        <p class="bb-tv-sidebar-version">v{{ $config.version }}{{ serverVersion ? ` · Server v${serverVersion}` : '' }}</p>
+      </div>
+    </nav>
+  </div>
 </template>
 
 <script>
@@ -68,6 +66,15 @@ export default {
     },
     serverConnectionConfig() {
       return this.$store.state.user.serverConnectionConfig
+    },
+    serverVersion() {
+      return this.$store.state.serverSettings?.version || this.serverConnectionConfig?.version || ''
+    },
+    displayName() {
+      return this.user?.username || this.user?.name || this.serverConnectionConfig?.username || 'Guest'
+    },
+    displayEmail() {
+      return this.user?.email || this.serverConnectionConfig?.address || 'Not connected'
     },
     userIsAdminOrUp() {
       return this.$store.getters['user/getIsAdminOrUp']
@@ -173,7 +180,7 @@ export default {
           to: '/account'
         })
         items.push({
-          icon: 'equalizer',
+          icon: 'bar_chart',
           text: this.$strings.ButtonUserStats,
           to: '/stats'
         })
@@ -193,9 +200,14 @@ export default {
 
       if (this.serverConnectionConfig) {
         items.push({
-          icon: 'login',
+          icon: 'swap_horiz',
           text: this.$strings.ButtonSwitchServerUser,
           action: 'logout'
+        })
+        items.push({
+          icon: 'logout',
+          text: this.$strings.ButtonDisconnect || 'Sign Out',
+          action: 'disconnect'
         })
       }
 
@@ -207,20 +219,16 @@ export default {
       if (item.exact) return this.$route.path === item.to
       return this.$route.path === item.to || this.$route.path.startsWith(item.to + '/')
     },
-    expand() {
-      if (!this.show) this.show = true
-    },
     collapse() {
       this.show = false
-    },
-    toggle() {
-      this.show = !this.show
     },
     async clickAction(action) {
       await this.$hapticsImpact()
       if (action === 'logout') {
         await this.logout()
         this.$router.push('/connect')
+      } else if (action === 'disconnect') {
+        await this.disconnect()
       }
       this.collapse()
     },
@@ -246,28 +254,77 @@ export default {
 </script>
 
 <style scoped>
+.bb-tv-sidebar-root {
+  pointer-events: none;
+}
+
+.bb-tv-sidebar-root-open {
+  pointer-events: auto;
+}
+
+.bb-tv-sidebar-scrim {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 55;
+  cursor: pointer;
+}
+
 .bb-tv-sidebar {
   position: absolute;
   top: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
-  width: 112px;
-  background: #111315;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  width: 384px;
+  background: #383838;
   z-index: 60;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.18s ease-out, box-shadow 0.18s ease-out;
+  transform: translateX(100%);
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
 }
 
 .bb-tv-sidebar-expanded {
-  width: 344px;
-  box-shadow: 22px 0 70px rgba(0, 0, 0, 0.36);
+  transform: translateX(0);
+  box-shadow: -22px 0 70px rgba(0, 0, 0, 0.36);
+}
+
+.bb-tv-sidebar-header {
+  height: 100px;
+  width: 100%;
+  padding: 25px 32px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+}
+
+.bb-tv-sidebar-welcome {
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 23px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bb-tv-sidebar-email {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bb-tv-sidebar-brand {
-  height: 96px;
+  height: 64px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -301,23 +358,22 @@ export default {
 .bb-tv-sidebar-items {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 14px 20px;
+  padding: 0;
 }
 
 .bb-tv-sidebar-item,
 .bb-tv-sidebar-disconnect {
   width: 100%;
-  min-height: 68px;
+  height: 52px;
   display: flex;
   align-items: center;
-  border-radius: 8px;
   color: rgba(255, 255, 255, 0.68);
   text-decoration: none;
   cursor: pointer;
   outline: none;
   border: 2px solid transparent;
-  padding: 0 20px;
-  margin-bottom: 8px;
+  padding: 0 32px;
+  margin: 0;
   background: transparent;
 }
 
@@ -326,25 +382,20 @@ export default {
 .bb-tv-sidebar-disconnect .material-symbols {
   width: 36px;
   min-width: 36px;
-  text-align: center;
-  font-size: 28px;
+  text-align: left;
+  font-size: 24px;
   line-height: 1;
 }
 
 .bb-tv-sidebar-label {
-  margin-left: 20px;
-  font-size: 20px;
-  line-height: 26px;
+  margin-left: 4px;
+  font-size: 16px;
+  line-height: 19px;
   font-weight: 600;
-  opacity: 0;
+  opacity: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: opacity 0.12s ease-out;
-}
-
-.bb-tv-sidebar-expanded .bb-tv-sidebar-label {
-  opacity: 1;
 }
 
 .bb-tv-sidebar-item-active {
@@ -371,14 +422,15 @@ export default {
 }
 
 .bb-tv-sidebar-footer {
-  padding: 10px 14px 24px;
+  height: 100px;
+  padding: 16px 32px 0;
   color: rgba(255, 255, 255, 0.48);
   flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .bb-tv-sidebar-server,
 .bb-tv-sidebar-version {
-  padding: 0 20px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -386,17 +438,12 @@ export default {
 
 .bb-tv-sidebar-server {
   font-size: 12px;
-  line-height: 16px;
-  margin-bottom: 10px;
-  opacity: 0;
+  line-height: 15px;
+  margin-bottom: 4px;
 }
 
 .bb-tv-sidebar-version {
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.bb-tv-sidebar-expanded .bb-tv-sidebar-server {
-  opacity: 1;
+  font-size: 12px;
+  line-height: 14px;
 }
 </style>

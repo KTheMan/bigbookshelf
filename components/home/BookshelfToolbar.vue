@@ -1,20 +1,33 @@
 <template>
-  <div class="w-full h-11 bg-bg relative z-20">
-    <div id="bookshelf-toolbar" class="absolute top-0 left-0 w-full h-full z-20 flex items-center px-2">
-      <div class="flex items-center w-full text-sm">
-        <p v-show="!selectedSeriesName" class="pt-1">{{ $formatNumber(totalEntities) }} {{ entityTitle }}</p>
-        <p v-show="selectedSeriesName" class="ml-2 pt-1">{{ selectedSeriesName }} ({{ $formatNumber(totalEntities) }})</p>
-        <div class="flex-grow" />
-        <span v-if="page == 'library' || seriesBookPage" class="toolbar-action material-symbols" data-focusable @click="changeView">{{ !bookshelfListView ? 'view_list' : 'grid_view' }}</span>
-        <template v-if="page === 'library'">
-          <div class="relative flex items-center">
-            <span class="toolbar-action material-symbols" data-focusable @click="showSortFilterMenu = true">tune</span>
-            <div v-show="hasFilters" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-success border border-green-300 shadow-sm z-10 pointer-events-none" />
-          </div>
-        </template>
-        <span v-if="seriesBookPage" class="toolbar-action material-symbols" data-focusable @click="downloadSeries">download</span>
-        <span v-if="(page == 'library' && isBookLibrary) || seriesBookPage" class="toolbar-action material-symbols" data-focusable @click="showMoreMenuDialog = true">more_vert</span>
-      </div>
+  <div class="bb-tv-toolbar-shell">
+    <div id="bookshelf-toolbar" class="bb-tv-toolbar">
+      <button type="button" class="bb-tv-toolbar-chip" @click="showSortFilterMenu = true">
+        <span class="material-symbols">swap_vert</span>
+        <span>Sort: {{ sortLabel }}</span>
+        <span class="material-symbols">expand_more</span>
+      </button>
+
+      <button type="button" class="bb-tv-toolbar-chip" @click="showSortFilterMenu = true">
+        <span class="material-symbols">filter_alt</span>
+        <span>Filter: {{ filterLabel }}</span>
+        <span v-show="hasFilters" class="bb-tv-toolbar-dot" />
+      </button>
+
+      <button v-if="page == 'library' || page == 'home' || seriesBookPage" type="button" class="bb-tv-toolbar-chip" @click="changeView">
+        <span class="material-symbols">{{ !bookshelfListView ? 'grid_view' : 'view_list' }}</span>
+        <span>{{ !bookshelfListView ? 'Grid View' : 'List View' }}</span>
+      </button>
+
+      <button v-if="seriesBookPage" type="button" class="bb-tv-toolbar-icon" aria-label="Download series" @click="downloadSeries">
+        <span class="material-symbols">download</span>
+      </button>
+
+      <button v-if="(page == 'library' && isBookLibrary) || seriesBookPage" type="button" class="bb-tv-toolbar-icon" aria-label="More options" @click="showMoreMenuDialog = true">
+        <span class="material-symbols">more_vert</span>
+      </button>
+
+      <div class="bb-tv-toolbar-spacer" />
+      <p class="bb-tv-toolbar-count">{{ toolbarCountLabel }}</p>
     </div>
 
     <modals-order-modal v-model="showSortModal" :order-by.sync="settings.mobileOrderBy" :descending.sync="settings.mobileOrderDesc" @change="updateOrder" />
@@ -53,11 +66,12 @@ export default {
       return this.currentLibraryMediaType === 'book'
     },
     hasFilters() {
-      return this.$store.getters['user/getUserSetting']('mobileFilterBy') !== 'all'
+      const filter = this.$store.getters['user/getUserSetting']('mobileFilterBy')
+      return !!filter && filter !== 'all'
     },
     page() {
       var routeName = this.$route.name || ''
-      return routeName.split('-')[1]
+      return routeName === 'bookshelf' ? 'home' : routeName.split('-')[1]
     },
     seriesBookPage() {
       return this.$route.name == 'bookshelf-series-id'
@@ -66,7 +80,9 @@ export default {
       return this.$route.query || {}
     },
     entityTitle() {
-      if (this.page === 'library') {
+      if (this.page === 'home') {
+        return 'items'
+      } else if (this.page === 'library') {
         return this.isPodcast ? this.$strings.LabelPodcasts : this.$strings.LabelBooks
       } else if (this.page === 'playlists') {
         return this.$strings.ButtonPlaylists
@@ -78,6 +94,23 @@ export default {
         return this.$strings.LabelAuthors
       }
       return ''
+    },
+    sortLabel() {
+      if (!this.settings.mobileOrderBy) return 'Recently Added'
+      if (this.settings.mobileOrderBy === 'addedAt') return 'Recently Added'
+      if (this.settings.mobileOrderBy === 'media.metadata.title') return 'Title'
+      if (this.settings.mobileOrderBy === 'media.metadata.authorNameLF') return 'Author'
+      if (this.settings.mobileOrderBy === 'media.duration') return 'Duration'
+      return 'Custom'
+    },
+    filterLabel() {
+      if (!this.settings.mobileFilterBy || this.settings.mobileFilterBy === 'all') return 'All'
+      return String(this.settings.mobileFilterBy).replace(/_/g, ' ')
+    },
+    toolbarCountLabel() {
+      if (this.selectedSeriesName) return `${this.selectedSeriesName} (${this.$formatNumber(this.totalEntities)})`
+      if (this.totalEntities) return `${this.$formatNumber(this.totalEntities)} ${this.entityTitle || 'items'}`
+      return this.entityTitle || 'Bookshelf'
     },
     selectedSeriesName() {
       if (this.page === 'series' && this.$route.params.id && this.$store.state.globals.series) {
@@ -190,24 +223,90 @@ export default {
 </script>
 
 <style>
-#bookshelf-toolbar {
-  box-shadow: 0px 5px 5px #11111155;
+.bb-tv-toolbar-shell {
+  width: 100%;
+  height: 56px;
+  background: #383838;
+  position: relative;
+  z-index: 20;
 }
 
-/* Sort/filter/view controls: bigger, clearly separated D-pad targets so the
-   toolbar reads as a first-class row rather than tiny icons off to the side. */
-.toolbar-action {
-  font-size: 1.5rem;
-  padding: 0.3rem 0.55rem;
-  margin-left: 0.35rem;
-  border-radius: 8px;
-  line-height: 1;
-  cursor: pointer;
+.bb-tv-toolbar {
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
 }
-html[data-platform='webos'] .toolbar-action,
-html[data-platform='tizen'] .toolbar-action {
-  font-size: 1.85rem;
-  padding: 0.35rem 0.7rem;
-  margin-left: 0.5rem;
+
+.bb-tv-toolbar-chip,
+.bb-tv-toolbar-icon {
+  height: 35px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  outline: none;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  position: relative;
+}
+
+.bb-tv-toolbar-chip {
+  padding: 0 12px;
+  margin-right: 12px;
+}
+
+.bb-tv-toolbar-chip .material-symbols,
+.bb-tv-toolbar-icon .material-symbols {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.bb-tv-toolbar-chip .material-symbols:first-child {
+  margin-right: 8px;
+}
+
+.bb-tv-toolbar-chip .material-symbols:last-child {
+  margin-left: 8px;
+}
+
+.bb-tv-toolbar-icon {
+  width: 35px;
+  margin-right: 12px;
+}
+
+.bb-tv-toolbar-chip:focus,
+.bb-tv-toolbar-chip.webos-focused,
+.bb-tv-toolbar-icon:focus,
+.bb-tv-toolbar-icon.webos-focused {
+  border-color: #1ad691;
+  box-shadow: 0 0 0 4px rgba(26, 214, 145, 0.18);
+}
+
+.bb-tv-toolbar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: #1ad691;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.bb-tv-toolbar-spacer {
+  flex: 1;
+}
+
+.bb-tv-toolbar-count {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 </style>

@@ -4,6 +4,9 @@ ipk/
 .output/
 test-results/
 playwright-report/
+.codex/
+.codex-gh/
+.codex-git-tmp/
 *.ipk
 *.wgt
 *.log

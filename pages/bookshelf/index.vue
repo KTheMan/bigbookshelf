@@ -1,15 +1,15 @@
 <template>
-  <div class="w-full h-full min-h-full relative">
-    <div v-if="attemptingConnection" class="w-full pt-4 flex items-center justify-center">
+  <div class="w-full h-full min-h-full relative bb-tv-home">
+    <div v-if="attemptingConnection" class="bb-tv-home-status">
       <widgets-loading-spinner />
       <p class="pl-4">{{ $strings.MessageAttemptingServerConnection }}</p>
     </div>
-    <div v-if="shelves.length && isLoading" class="w-full pt-4 flex items-center justify-center">
+    <div v-if="shelves.length && isLoading" class="bb-tv-home-status">
       <widgets-loading-spinner />
       <p class="pl-4">{{ $strings.MessageLoadingServerData }}</p>
     </div>
 
-    <div class="w-full" :class="{ 'py-6': altViewEnabled }">
+    <div class="w-full bb-tv-home-shelves" :class="{ 'py-6': altViewEnabled }">
       <template v-for="(shelf, index) in shelves">
         <bookshelf-shelf :key="shelf.id" :label="getShelfLabel(shelf)" :entities="shelf.entities" :type="shelf.type" :style="{ zIndex: shelves.length - index }" />
       </template>
@@ -239,6 +239,7 @@ export default {
       this.localLibraryItems = await this.$db.getLocalLibraryItems()
       const localCategories = this.getLocalMediaItemCategories()
       this.shelves = localCategories
+      this.emitTotalEntities()
       console.log('[categories] Local shelves set', this.shelves.length, this.lastLocalFetch)
 
       if (isConnectedToServerWithInternet) {
@@ -252,6 +253,7 @@ export default {
           this.lastServerFetch = 0
           this.lastLocalFetch = Date.now()
           this.isLoading = false
+          this.emitTotalEntities()
           console.log('[categories] Local shelves set from failure', this.shelves.length, this.lastLocalFetch)
           return
         }
@@ -275,10 +277,15 @@ export default {
         // Only add the local shelf with the same media type
         const localShelves = localCategories.filter((cat) => cat.type === this.currentLibraryMediaType && !cat.localOnly)
         this.shelves.push(...localShelves)
+        this.emitTotalEntities()
         console.log('[categories] Server shelves set', this.shelves.length, this.lastServerFetch)
       }
 
       this.isLoading = false
+    },
+    emitTotalEntities() {
+      const total = this.shelves.reduce((count, shelf) => count + (shelf.entities?.length || 0), 0)
+      this.$eventBus.$emit('bookshelf-total-entities', total)
     },
     libraryChanged() {
       if (this.currentLibraryId) {
@@ -286,7 +293,7 @@ export default {
         this.fetchCategories()
       }
     },
-    audiobookAdded(audiobook) {
+    audiobookAdded() {
       // TODO: Check if audiobook would be on this shelf
       if (!this.search) {
         this.fetchCategories()
@@ -348,3 +355,22 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.bb-tv-home {
+  background: #232323;
+}
+
+.bb-tv-home-status {
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.bb-tv-home-shelves {
+  padding-top: 0;
+}
+</style>

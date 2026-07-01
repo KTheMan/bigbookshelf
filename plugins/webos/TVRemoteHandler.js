@@ -1,5 +1,3 @@
-import Vue from 'vue'
-
 class TVRemoteHandler {
   constructor() {
     this.handlers = new Map()
@@ -235,9 +233,9 @@ class TVRemoteHandler {
     const store = window.$nuxt?.$store
     const drawerOpen = store?.state.showSideDrawer
 
-    // The redesign uses a left navigation rail. While expanded, pressing Right
-    // exits the rail and restores focus to the page content.
-    if (drawerOpen && direction === 'right') {
+    // The redesign uses a right-side navigation drawer. While expanded,
+    // pressing Left exits the drawer and restores focus to the page content.
+    if (drawerOpen && direction === 'left') {
       store.commit('setShowSideDrawer', false)
       setTimeout(() => this.setInitialFocus(), 40)
       return
@@ -248,6 +246,10 @@ class TVRemoteHandler {
 
     const current = this.getFocusedElement()
     const onScreen = this.getFocusableElements(root)
+    if (drawerOpen && root && current && !root.contains(current)) {
+      if (onScreen.length) this.setFocus(onScreen[0])
+      return
+    }
     if (!current) {
       if (onScreen.length) this.setFocus(onScreen[0])
       else if (drawerOpen) store.commit('setShowSideDrawer', false)
@@ -278,6 +280,7 @@ class TVRemoteHandler {
     }
 
     if (best) this.setFocus(best)
+    else if (direction === 'left' || direction === 'right') this.setFocus(current)
     else this._scrollInDirection(direction)
   }
 
@@ -351,6 +354,7 @@ class TVRemoteHandler {
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-focusable]'
       )
     ).filter((el) => {
+      if (!root && !window.$nuxt?.$store?.state.showSideDrawer && el.closest('#side-drawer-panel')) return false
       const style = window.getComputedStyle(el)
       if (style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null) return false
       const rect = el.getBoundingClientRect()
@@ -586,6 +590,13 @@ class TVRemoteHandler {
     this.setFocus(topmost)
   }
 
+  focusDrawer() {
+    const sidebar = document.getElementById('side-drawer-panel')
+    if (!sidebar) return
+    const focusable = this.getFocusableElements(sidebar)
+    if (focusable.length) this.setFocus(focusable[0])
+  }
+
   enable() { this.enabled = true }
   disable() { this.enabled = false }
 }
@@ -636,6 +647,14 @@ export default ({ app }, inject) => {
   app.store.watch(
     (_state, getters) => getters['getIsPlayerOpen'],
     () => { setTimeout(() => tvRemote.setInitialFocus(), 100) }
+  )
+
+  app.store.watch(
+    (state) => state.showSideDrawer,
+    (isOpen) => {
+      if (isOpen) setTimeout(() => tvRemote.focusDrawer(), 80)
+      else setTimeout(() => tvRemote.setInitialFocus(), 80)
+    }
   )
 }
 

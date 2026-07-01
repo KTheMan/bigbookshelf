@@ -1,15 +1,15 @@
 <template>
-  <div class="w-full relative">
+  <div class="w-full relative" :class="$platform === 'webos' || $platform === 'tizen' ? 'bb-tv-shelf' : ''">
     <div v-if="altViewEnabled" class="px-5 pb-3 pt-4">
       <p class="font-semibold" :style="{ fontSize: sizeMultiplier + 'rem' }">{{ label }}</p>
     </div>
 
-    <div class="flex items-end px-3 max-w-full overflow-x-auto" :class="altViewEnabled ? '' : 'bookshelfRow'" :style="{ height: shelfHeight + 'px', paddingBottom: entityPaddingBottom + 'px' }">
+    <div class="flex items-end px-3 max-w-full overflow-x-auto" :class="altViewEnabled ? '' : 'bookshelfRow bb-tv-shelf-row'" :style="{ height: shelfHeight + 'px', paddingBottom: entityPaddingBottom + 'px' }">
       <template v-for="(entity, index) in entities">
-        <cards-lazy-book-card v-if="type === 'book' || type === 'podcast'" :key="entity.id" :index="index" :book-mount="entity" :width="bookWidth" :height="entityHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" :is-alt-view-enabled="altViewEnabled" class="mx-2 relative" />
-        <cards-lazy-book-card v-if="type === 'episode'" :key="entity.recentEpisode.id" :index="index" :book-mount="entity" :width="bookWidth" :height="entityHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" :is-alt-view-enabled="altViewEnabled" class="mx-2 relative" />
-        <cards-lazy-series-card v-else-if="type === 'series'" :key="entity.id" :index="index" :series-mount="entity" :width="bookWidth * 2" :height="entityHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" :is-alt-view-enabled="altViewEnabled" is-categorized class="mx-2 relative" />
-        <cards-author-card v-else-if="type === 'authors'" :key="entity.id" :width="bookWidth / 1.25" :height="bookWidth" :author="entity" :size-multiplier="1" class="mx-2" />
+        <cards-lazy-book-card v-if="type === 'book' || type === 'podcast'" :key="entity.id" :index="index" :book-mount="entity" :width="bookWidth" :height="entityHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" :is-alt-view-enabled="altViewEnabled" class="mx-2 relative bb-tv-shelf-card" />
+        <cards-lazy-book-card v-if="type === 'episode'" :key="entity.recentEpisode.id" :index="index" :book-mount="entity" :width="bookWidth" :height="entityHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" :is-alt-view-enabled="altViewEnabled" class="mx-2 relative bb-tv-shelf-card" />
+        <cards-lazy-series-card v-else-if="type === 'series'" :key="entity.id" :index="index" :series-mount="entity" :width="bookWidth * 2" :height="entityHeight" :book-cover-aspect-ratio="bookCoverAspectRatio" :is-alt-view-enabled="altViewEnabled" is-categorized class="mx-2 relative bb-tv-shelf-card" />
+        <cards-author-card v-else-if="type === 'authors'" :key="entity.id" :width="bookWidth / 1.25" :height="bookWidth" :author="entity" :size-multiplier="1" class="mx-2 bb-tv-shelf-card" />
       </template>
     </div>
 
@@ -56,6 +56,7 @@ export default {
     },
     bookHeight() {
       if (this.isCoverSquareAspectRatio) return this.bookWidth
+      if (this.$platform === 'webos' || this.$platform === 'tizen') return 300
       return this.bookWidth * 1.6
     },
     entityHeight() {
@@ -79,3 +80,20 @@ export default {
   mounted() {}
 }
 </script>
+
+<style scoped>
+.bb-tv-shelf {
+  margin-bottom: 60px;
+}
+
+.bb-tv-shelf-row {
+  align-items: flex-start;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.bb-tv-shelf-card {
+  margin-left: 0 !important;
+  margin-right: 24px !important;
+}
+</style>

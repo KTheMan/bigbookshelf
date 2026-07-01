@@ -1,11 +1,13 @@
-html[data-platform='webos'] {
+html[data-platform='webos'],
+html[data-platform='tizen'] {
   --font-size-base: 1.25rem;
   --line-height-base: 1.5;
   font-size: 20px;
 }
 
 /* TV: scale up base text so it's readable from 10ft */
-html[data-platform='webos'] body {
+html[data-platform='webos'] body,
+html[data-platform='tizen'] body {
   font-size: 1.25rem;
 }
 
@@ -163,15 +165,18 @@ input, textarea {
 /* ─── TV-specific layout overrides ─────────────────────────────────────────── */
 
 /* Appbar: larger icons and library label text on TV */
-html[data-platform='webos'] #appbar .material-symbols {
+html[data-platform='webos'] #appbar .material-symbols,
+html[data-platform='tizen'] #appbar .material-symbols {
   font-size: 2rem;
 }
-html[data-platform='webos'] #appbar p {
+html[data-platform='webos'] #appbar p,
+html[data-platform='tizen'] #appbar p {
   font-size: 1rem;
 }
 
 /* Book cards on TV: increase title / author text size */
-html[data-platform='webos'] .bookshelfRow {
+html[data-platform='webos'] .bookshelfRow,
+html[data-platform='tizen'] .bookshelfRow {
   padding-left: 24px;
   padding-right: 24px;
 }
@@ -188,7 +193,15 @@ html[data-platform='webos'] [data-focusable].webos-focused,
 html[data-platform='webos'] button:focus,
 html[data-platform='webos'] button.webos-focused,
 html[data-platform='webos'] a:focus,
-html[data-platform='webos'] a.webos-focused {
+html[data-platform='webos'] a.webos-focused,
+html[data-platform='tizen'] [tabindex]:focus,
+html[data-platform='tizen'] [tabindex].webos-focused,
+html[data-platform='tizen'] [data-focusable]:focus,
+html[data-platform='tizen'] [data-focusable].webos-focused,
+html[data-platform='tizen'] button:focus,
+html[data-platform='tizen'] button.webos-focused,
+html[data-platform='tizen'] a:focus,
+html[data-platform='tizen'] a.webos-focused {
   outline: none;
   box-shadow: 0 0 0 3px rgba(26, 214, 145, 0.9), 0 0 12px 2px rgba(26, 214, 145, 0.35);
   transform: scale(1.04);
@@ -204,35 +217,50 @@ html[data-platform='webos'] a.webos-focused {
   html[data-platform='webos'] button:focus,
   html[data-platform='webos'] button.webos-focused,
   html[data-platform='webos'] a:focus,
-  html[data-platform='webos'] a.webos-focused {
+  html[data-platform='webos'] a.webos-focused,
+  html[data-platform='tizen'] [tabindex]:focus,
+  html[data-platform='tizen'] [tabindex].webos-focused,
+  html[data-platform='tizen'] [data-focusable]:focus,
+  html[data-platform='tizen'] [data-focusable].webos-focused,
+  html[data-platform='tizen'] button:focus,
+  html[data-platform='tizen'] button.webos-focused,
+  html[data-platform='tizen'] a:focus,
+  html[data-platform='tizen'] a.webos-focused {
     transform: none;
   }
 }
 
 /* Nav bar and toolbar on TV */
 html[data-platform='webos'] .home-bookshelf-nav-bar,
-html[data-platform='webos'] .home-bookshelf-toolbar {
+html[data-platform='webos'] .home-bookshelf-toolbar,
+html[data-platform='tizen'] .home-bookshelf-nav-bar,
+html[data-platform='tizen'] .home-bookshelf-toolbar {
   font-size: 1.1rem;
 }
 
 /* Item detail page: wider cover on TV */
-html[data-platform='webos'] #item-page {
+html[data-platform='webos'] #item-page,
+html[data-platform='tizen'] #item-page {
   padding: 0 5vw;
 }
 
 /* Progress bar on book cards: taller so it's visible at distance */
-html[data-platform='webos'] .box-shadow-progressbar {
+html[data-platform='webos'] .box-shadow-progressbar,
+html[data-platform='tizen'] .box-shadow-progressbar {
   height: 6px;
 }
 
 /* Connection indicator and download indicator: larger */
 html[data-platform='webos'] .widgets-connection-indicator span,
-html[data-platform='webos'] .widgets-download-progress-indicator span {
+html[data-platform='webos'] .widgets-download-progress-indicator span,
+html[data-platform='tizen'] .widgets-connection-indicator span,
+html[data-platform='tizen'] .widgets-download-progress-indicator span {
   font-size: 1.5rem;
 }
 
 /* Bookshelf: let the inner scroll container grow to full height so the last row isn't clipped */
-html[data-platform='webos'] #bookshelf {
+html[data-platform='webos'] #bookshelf,
+html[data-platform='tizen'] #bookshelf {
   height: 100%;
   min-height: 100%;
 }

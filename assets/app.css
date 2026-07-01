@@ -39,7 +39,7 @@ html, body {
 
 .bb-tv-layout {
   display: flex;
-  background: #151618;
+  background: #232323;
 }
 
 .bb-tv-main-shell {
@@ -47,26 +47,21 @@ html, body {
   flex: 1;
   min-width: 0;
   height: 100%;
-  margin-left: 112px;
-  background: #202123;
-  transition: margin-left 0.18s ease-out;
-}
-
-#side-drawer-panel.bb-tv-sidebar-expanded + .bb-tv-main-shell {
-  margin-left: 344px;
+  margin-left: 0;
+  background: #232323;
 }
 
 #content {
-  height: calc(100% - 96px);
-  min-height: calc(100% - 96px);
-  max-height: calc(100% - 96px);
+  height: calc(100% - 64px);
+  min-height: calc(100% - 64px);
+  max-height: calc(100% - 64px);
   overflow: hidden;
   position: relative;
 }
 
 #content.playerOpen {
   /* Mini player overlay sits above the content; do not shift content height. */
-  height: calc(100% - 96px);
+  height: calc(100% - 64px);
 }
 
 /*

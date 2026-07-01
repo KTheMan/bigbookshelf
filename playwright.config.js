@@ -7,7 +7,14 @@ const { defineConfig, devices } = require('@playwright/test')
 // when it actually exists, otherwise let Playwright find its own (executablePath
 // undefined) so `npx playwright install` works everywhere.
 const DEV_CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
-const executablePath = fs.existsSync(DEV_CHROME) ? DEV_CHROME : undefined
+const LOCAL_BROWSER_CANDIDATES = [
+  DEV_CHROME,
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+]
+const executablePath = LOCAL_BROWSER_CANDIDATES.find((browserPath) => fs.existsSync(browserPath))
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -19,7 +26,7 @@ module.exports = defineConfig({
 
   // Serve the built dist/ so the suite is self-contained.
   webServer: {
-    command: 'npx serve -l 7891 -s dist',
+    command: 'node ./node_modules/serve/build/main.js -l 7891 -s dist',
     url: 'http://localhost:7891',
     reuseExistingServer: !process.env.CI,
     timeout: 60000

@@ -1,31 +1,53 @@
 <template>
   <header id="appbar" class="bb-tv-topbar">
-    <div class="bb-tv-title-block">
+    <div class="bb-tv-brand">
       <button v-if="showBack" type="button" aria-label="Back" class="bb-tv-back-btn" @click="back">
         <span class="material-symbols">arrow_back</span>
         <span>Back</span>
       </button>
-      <div v-else>
-        <p class="bb-tv-eyebrow">{{ sectionLabel }}</p>
-        <h1 class="bb-tv-title">{{ pageTitle }}</h1>
+      <div v-else class="bb-tv-brand-mark">
+        <img src="Logo.png" alt="" />
+        <span>Bigbookshelf</span>
       </div>
     </div>
 
+    <div class="bb-tv-library-switcher" aria-label="Library media type">
+      <button
+        type="button"
+        class="bb-tv-library-chip"
+        :class="{ 'bb-tv-library-chip-active': !isPodcastLibrary }"
+        @click="clickShowLibraryModal"
+      >
+        <span class="material-symbols fill">menu_book</span>
+        <span>Books</span>
+      </button>
+      <div class="bb-tv-library-divider" />
+      <button
+        type="button"
+        class="bb-tv-library-chip"
+        :class="{ 'bb-tv-library-chip-active': isPodcastLibrary }"
+        @click="clickShowLibraryModal"
+      >
+        <span class="material-symbols fill">podcasts</span>
+        <span>Podcasts</span>
+      </button>
+    </div>
+
     <div class="bb-tv-topbar-actions">
-      <button v-if="user && currentLibrary" type="button" aria-label="Show library modal" class="bb-tv-library-pill" @click="clickShowLibraryModal">
+      <button v-if="user && currentLibrary" type="button" aria-label="Change library" class="bb-tv-icon-btn" @click="clickShowLibraryModal">
         <ui-library-icon :icon="currentLibraryIcon" :size="5" font-size="base" />
-        <span>{{ currentLibraryName }}</span>
       </button>
 
-      <widgets-connection-indicator />
-      <widgets-download-progress-indicator />
-
-      <button type="button" aria-label="Cast" v-show="isCastAvailable && user" class="bb-tv-icon-btn" @click="castClick">
-        <span class="material-symbols">{{ isCasting ? 'cast_connected' : 'cast' }}</span>
-      </button>
+      <nuxt-link v-if="user" class="bb-tv-icon-btn" to="/downloads" aria-label="Downloads">
+        <span class="material-symbols">download</span>
+      </nuxt-link>
 
       <nuxt-link v-if="user" class="bb-tv-icon-btn" to="/search" aria-label="Search">
         <span class="material-symbols">search</span>
+      </nuxt-link>
+
+      <nuxt-link v-else class="bb-tv-icon-btn" to="/connect" aria-label="Connect">
+        <span class="material-symbols">cloud</span>
       </nuxt-link>
 
       <button type="button" aria-label="Toggle navigation" class="bb-tv-icon-btn bb-tv-icon-btn-primary" @click="clickShowSideDrawer">
@@ -74,6 +96,9 @@ export default {
     },
     isCasting() {
       return this.$store.state.isCasting
+    },
+    isPodcastLibrary() {
+      return this.$store.getters['libraries/getCurrentLibraryMediaType'] === 'podcast'
     },
     pageTitle() {
       const routeName = this.$route.name || ''
@@ -132,20 +157,43 @@ export default {
 
 <style scoped>
 .bb-tv-topbar {
-  height: 96px;
+  height: 64px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px 0 36px;
-  background: #202123;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 32px;
+  background: #383838;
   position: relative;
   z-index: 20;
 }
 
-.bb-tv-title-block {
+.bb-tv-brand {
+  width: 284px;
   min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.bb-tv-brand-mark {
+  display: flex;
+  align-items: center;
+  height: 36px;
+}
+
+.bb-tv-brand-mark img {
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  flex-shrink: 0;
+}
+
+.bb-tv-brand-mark span {
+  margin-left: 10px;
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 25px;
+  font-weight: 700;
 }
 
 .bb-tv-eyebrow {
@@ -164,6 +212,50 @@ export default {
   font-weight: 700;
 }
 
+.bb-tv-library-switcher {
+  position: absolute;
+  left: 50%;
+  top: 11px;
+  transform: translateX(-50%);
+  height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+.bb-tv-library-chip {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.bb-tv-library-chip .material-symbols {
+  margin-right: 8px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.bb-tv-library-chip-active {
+  background: #232323;
+  color: #1ad691;
+}
+
+.bb-tv-library-divider {
+  width: 1px;
+  height: 32px;
+  margin: 0 24px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .bb-tv-topbar-actions {
   display: flex;
   align-items: center;
@@ -171,17 +263,17 @@ export default {
 }
 
 .bb-tv-topbar-actions > * + * {
-  margin-left: 14px;
+  margin-left: 16px;
 }
 
 .bb-tv-library-pill,
 .bb-tv-icon-btn,
 .bb-tv-back-btn {
-  height: 56px;
+  height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 28px;
+  border-radius: 8px;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.07);
   border: 2px solid transparent;
@@ -207,11 +299,11 @@ export default {
 }
 
 .bb-tv-icon-btn {
-  width: 56px;
+  width: 50px;
 }
 
 .bb-tv-icon-btn .material-symbols {
-  font-size: 30px;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -221,7 +313,7 @@ export default {
 }
 
 .bb-tv-back-btn {
-  padding: 0 24px 0 18px;
+  padding: 0 18px 0 14px;
   color: #111315;
   background: #1ad691;
   font-size: 16px;
@@ -231,10 +323,12 @@ export default {
 }
 
 .bb-tv-back-btn .material-symbols {
-  font-size: 28px;
+  font-size: 24px;
   margin-right: 8px;
 }
 
+.bb-tv-library-chip:focus,
+.bb-tv-library-chip.webos-focused,
 .bb-tv-library-pill:focus,
 .bb-tv-library-pill.webos-focused,
 .bb-tv-icon-btn:focus,
