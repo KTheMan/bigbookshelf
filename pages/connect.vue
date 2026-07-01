@@ -168,11 +168,25 @@
           </div>
 
           <div class="bb-connect-form-footer">
-            <button type="submit" class="bb-connect-signin-btn" :disabled="loading">
-              {{ loading ? 'SIGNING IN...' : 'SIGN IN' }}
+            <button
+              type="button"
+              class="bb-connect-save-toggle"
+              role="checkbox"
+              :aria-checked="saveCredentials ? 'true' : 'false'"
+              @click="saveCredentials = !saveCredentials"
+            >
+              <span class="bb-connect-save-box">
+                <span v-if="saveCredentials" class="material-symbols">check</span>
+              </span>
+              <span>SAVE CREDENTIALS</span>
+            </button>
+
+            <button type="submit" class="bb-connect-signin-btn" :disabled="loading || resumingSession">
+              {{ loading || resumingSession ? 'CONNECTING...' : 'SIGN IN' }}
             </button>
           </div>
 
+          <p v-if="resumingSession" class="bb-connect-status">Connecting to saved session...</p>
           <p v-if="errorMessage" class="bb-connect-error">{{ errorMessage }}</p>
         </form>
       </div>
@@ -184,6 +198,8 @@
 </template>
 
 <script>
+import { CapacitorHttp } from '@capacitor/core'
+
 export default {
   layout: 'blank',
   data() {
@@ -194,6 +210,8 @@ export default {
       loading: false,
       focusedField: null,
       editingField: null,
+      saveCredentials: true,
+      resumingSession: false,
       addressError: '',
       errorMessage: '',
       savedServers: [],
@@ -206,16 +224,16 @@ export default {
     this.deviceData = await this.$db.getDeviceData()
     this.$store.commit('setDeviceData', this.deviceData)
     this.savedServers = this.deviceData?.serverConnectionConfigs || []
+    let last = null
     if (this.savedServers.length && !this.address) {
       const lastId = this.deviceData?.lastServerConnectionConfigId
-      const last = this.savedServers.find((s) => s.id === lastId) || this.savedServers[0]
-      this.address = last.address
-      this.username = last.username || ''
-      this.password = last.password || ''
-      this.focusedServerId = last.id
+      last = this.savedServers.find((s) => s.id === lastId) || this.savedServers[0]
+      this.populateFromServer(last)
     }
     if (this.$route.query.error) {
       this.errorMessage = this.$route.query.error
+    } else if (last?.token) {
+      await this.resumeSavedSession(last)
     }
   },
   methods: {
@@ -227,6 +245,11 @@ export default {
         return address
       }
     },
+    normalizeServerAddress(address) {
+      const trimmed = (address || '').trim().replace(/\/+$/, '')
+      if (!trimmed) return ''
+      return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+    },
     inputControlClass(field, options = {}) {
       return {
         'bb-connect-input-control-active': this.focusedField === field || this.editingField === field,
@@ -234,11 +257,16 @@ export default {
         'bb-connect-input-control-error': !!options.error
       }
     },
-    selectServer(server, options = {}) {
-      this.focusedServerId = server.id
+    populateFromServer(server) {
+      if (!server) return
       this.address = server.address || ''
       this.username = server.username || ''
       this.password = server.password || ''
+      this.focusedServerId = server.id
+      this.saveCredentials = true
+    },
+    selectServer(server, options = {}) {
+      this.populateFromServer(server)
       if (!options.silent) this.focusedField = null
     },
     addNewServer() {
@@ -247,6 +275,7 @@ export default {
       this.password = ''
       this.focusedServerId = null
       this.focusedField = 'address'
+      this.saveCredentials = true
       this.$nextTick(() => {
         if (this.$tvRemote && this.$refs.addressControl) this.$tvRemote.setFocus(this.$refs.addressControl)
       })
@@ -278,50 +307,142 @@ export default {
       })
     },
     async removeServer(server) {
-      const updated = this.savedServers.filter((s) => s.id !== server.id)
-      await this.$db.setServerConnectionConfigs(updated)
-      this.savedServers = updated
+      if (!server?.id) return
+      await this.$db.clearRefreshToken(server.id).catch(() => null)
+      await this.$db.removeServerConnectionConfig(server.id)
+      this.deviceData = await this.$db.getDeviceData()
+      this.savedServers = this.deviceData?.serverConnectionConfigs || []
+      const next = this.savedServers[0]
+      if (next) {
+        this.populateFromServer(next)
+      } else {
+        this.addNewServer()
+      }
+    },
+    async requestServerLogin(serverAddress) {
+      const response = await CapacitorHttp.post({
+        url: `${serverAddress}/login`,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-return-tokens': 'true'
+        },
+        data: {
+          username: this.username,
+          password: this.password || ''
+        },
+        connectTimeout: 20000
+      })
+
+      if (response.status >= 400) {
+        const message = typeof response.data === 'string' ? response.data : `HTTP ${response.status}`
+        throw new Error(message)
+      }
+      if (!response.data?.user) {
+        throw new Error(response.data?.error || 'Login response did not include a user')
+      }
+      return response.data
+    },
+    getTokenFromAuth(authRes, baseConfig = {}) {
+      return authRes?.user?.accessToken || authRes?.accessToken || authRes?.user?.token || authRes?.userDefaultToken || baseConfig.token
+    },
+    getRefreshTokenFromAuth(authRes, baseConfig = {}) {
+      return authRes?.user?.refreshToken || authRes?.refreshToken || baseConfig.refreshToken
+    },
+    async applyAuthenticatedSession(authRes, baseConfig = {}, { persist } = { persist: true }) {
+      const user = authRes?.user
+      if (!user) throw new Error('Authentication response did not include a user')
+
+      const serverSettings = authRes.serverSettings || {}
+      const token = this.getTokenFromAuth(authRes, baseConfig)
+      if (!token) throw new Error('Authentication response did not include an access token')
+
+      this.$store.commit('setServerSettings', serverSettings)
+      this.$store.commit('libraries/setEReaderDevices', authRes.ereaderDevices || [])
+      if (serverSettings.language && this.$setServerLanguageCode) this.$setServerLanguageCode(serverSettings.language)
+
+      const config = {
+        ...baseConfig,
+        address: baseConfig.address,
+        name: baseConfig.name || this.defaultServerName(baseConfig.address),
+        userId: user.id || baseConfig.userId,
+        username: user.username || baseConfig.username || this.username,
+        token,
+        refreshToken: persist ? this.getRefreshTokenFromAuth(authRes, baseConfig) : null,
+        version: serverSettings.version || baseConfig.version,
+        customHeaders: baseConfig.customHeaders || {}
+      }
+
+      let serverConnectionConfig
+      if (persist) {
+        serverConnectionConfig = await this.$db.setServerConnectionConfig(config)
+        this.deviceData = await this.$db.getDeviceData()
+        this.savedServers = this.deviceData?.serverConnectionConfigs || []
+      } else {
+        serverConnectionConfig = {
+          ...config,
+          id: config.id || `session_${Date.now()}`
+        }
+      }
+
+      const lastLibraryId = await this.$localStore.getLastLibraryId()
+      if (lastLibraryId && (!user.librariesAccessible?.length || user.librariesAccessible.includes(lastLibraryId))) {
+        this.$store.commit('libraries/setCurrentLibrary', lastLibraryId)
+      } else if (authRes.userDefaultLibraryId) {
+        this.$store.commit('libraries/setCurrentLibrary', authRes.userDefaultLibraryId)
+      }
+
+      this.$store.commit('user/setUser', user)
+      this.$store.commit('user/setAccessToken', serverConnectionConfig.token)
+      this.$store.commit('user/setServerConnectionConfig', serverConnectionConfig)
+      this.$socket.connect(serverConnectionConfig.address, serverConnectionConfig.token)
+      await this.$store.dispatch('libraries/load')
+      await this.$router.replace('/bookshelf')
+    },
+    async resumeSavedSession(server) {
+      if (this.resumingSession || !server?.token) return
+      this.resumingSession = true
+      this.errorMessage = ''
+      try {
+        const authRes = await this.$nativeHttp.post(`${server.address}/api/authorize`, null, {
+          headers: { Authorization: `Bearer ${server.token}` },
+          connectTimeout: 6000,
+          serverConnectionConfig: server
+        })
+
+        const serverSettings = authRes?.serverSettings || {}
+        if (this.$isValidVersion(serverSettings.version, '2.26.0') && (server.token === authRes?.user?.token || authRes?.user?.isOldToken)) {
+          throw new Error('Saved session uses an old token. Sign in again.')
+        }
+
+        const updatedToken = this.$store.getters['user/getToken']
+        await this.applyAuthenticatedSession(authRes, { ...server, token: updatedToken || server.token }, { persist: true })
+      } catch (error) {
+        console.error('saved session resume failed', error)
+        this.errorMessage = error?.message || 'Saved session expired. Sign in again.'
+        this.resumingSession = false
+      }
     },
     async submit() {
       this.errorMessage = ''
       this.addressError = ''
-      if (!this.address) {
+      const serverAddress = this.normalizeServerAddress(this.address)
+      if (!serverAddress) {
         this.addressError = 'Server address is required'
         return
       }
       this.loading = true
       try {
-        const nativeHttpOptions = {
-          headers: { Authorization: `Bearer ${this.password || ''}` },
-          connectTimeout: 6000,
-          serverConnectionConfig: { address: this.address }
-        }
-        const authRes = await this.$nativeHttp.post(`${this.address}/api/authorize`, { username: this.username, password: this.password }, nativeHttpOptions).catch(() => null)
-        if (!authRes) {
-          this.errorMessage = 'Could not connect to server'
-          this.loading = false
-          return
-        }
-        const { user, userDefaultLibraryId, serverSettings } = authRes
-        const config = {
-          id: 'srv_' + Date.now(),
-          address: this.address,
-          name: this.defaultServerName(this.address),
-          username: this.username,
-          token: authRes.userDefaultToken || this.password,
-          version: serverSettings.version
-        }
-        await this.$db.setServerConnectionConfigs([...(this.savedServers || []), config])
-        this.$store.commit('setServerSettings', serverSettings)
-        this.$store.commit('user/setUser', user)
-        this.$store.commit('user/setAccessToken', config.token)
-        this.$store.commit('user/setServerConnectionConfig', config)
-        const lastLibId = await this.$localStore.getLastLibraryId()
-        const libId = lastLibId && user.librariesAccessible.includes(lastLibId) ? lastLibId : userDefaultLibraryId
-        if (libId) this.$store.commit('libraries/setCurrentLibrary', libId)
-        this.$socket.connect(config.address, config.token)
-        await this.$store.dispatch('libraries/load')
-        this.$router.push('/bookshelf')
+        const selectedServer = this.savedServers.find((server) => server.id === this.focusedServerId)
+        const authRes = await this.requestServerLogin(serverAddress)
+        await this.applyAuthenticatedSession(
+          authRes,
+          {
+            ...(selectedServer || {}),
+            address: serverAddress,
+            username: this.username
+          },
+          { persist: this.saveCredentials }
+        )
       } catch (err) {
         console.error('connect error', err)
         this.errorMessage = err.message || 'Sign-in failed'
@@ -616,8 +737,52 @@ export default {
 .bb-connect-form-footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-top: 3px;
+}
+
+.bb-connect-save-toggle {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #e6edf3;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  outline: none;
+}
+
+.bb-connect-save-toggle.webos-focused,
+.bb-connect-save-toggle:focus {
+  border-color: #1ad691;
+  box-shadow: 0 0 0 4px rgba(26, 214, 145, 0.18);
+}
+
+.bb-connect-save-box {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #4b5559;
+  border-radius: 4px;
+  background-color: #383838;
+  box-sizing: border-box;
+}
+
+.bb-connect-save-box .material-symbols {
+  color: #1ad691;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .bb-connect-signin-btn {
@@ -644,6 +809,13 @@ export default {
 .bb-connect-signin-btn:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+.bb-connect-status {
+  color: #a0a6ac;
+  font-size: 13px;
+  margin: 10px 0 0;
+  text-align: center;
 }
 
 .bb-connect-error {

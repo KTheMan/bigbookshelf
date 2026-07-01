@@ -69,8 +69,9 @@ async function connectToServer(page, config = PRIMARY) {
   const passwordInput = page.locator('input[type="password"]')
   await passwordInput.fill(config.pass)
 
-  // Submit
-  await page.keyboard.press('Enter')
+  // Submit through the visible command button. Pressing Enter while a TV text
+  // field is in edit mode exits edit mode instead of submitting the form.
+  await page.locator('button[type="submit"]').click()
 
   // Wait for redirect to bookshelf — 12s; self-hosted servers can be slow but
   // we don't want one unreachable server blocking the whole suite for 20s+.

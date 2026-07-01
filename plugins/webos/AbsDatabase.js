@@ -78,6 +78,10 @@ class AbsDatabaseWeb extends WebPlugin {
     var serverConnectionConfigId = serverConnectionConfigCallObject.serverConnectionConfigId
     var deviceData = await this.getDeviceData()
     deviceData.serverConnectionConfigs = deviceData.serverConnectionConfigs.filter((ssc) => ssc.id != serverConnectionConfigId)
+    if (deviceData.lastServerConnectionConfigId === serverConnectionConfigId) {
+      deviceData.lastServerConnectionConfigId = deviceData.serverConnectionConfigs[0]?.id || null
+    }
+    localStorage.removeItem(`refresh_token_${serverConnectionConfigId}`)
     localStorage.setItem('device', JSON.stringify(deviceData))
   }
 

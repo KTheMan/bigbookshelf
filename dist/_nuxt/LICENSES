@@ -59,7 +59,18 @@ PERFORMANCE OF THIS SOFTWARE.
 
 /*! Fast Average Color | © 2026 Denis Seleznev | MIT License | https://github.com/fast-average-color/fast-average-color */
 
-/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
+
+/*!
+ * Vue.js v2.7.16
+ * (c) 2014-2023 Evan You
+ * Released under the MIT License.
+ */
+
+/*!
+ * vuex v3.6.2
+ * (c) 2021 Evan You
+ * @license MIT
+ */
 
 
 /**!
