@@ -1,83 +1,12 @@
 const { test, expect } = require('@playwright/test')
-
-const SERVER = 'http://studio.local:13378'
-
-async function mockAudiobookshelf(page) {
-  const library = {
-    id: 'lib-1',
-    name: 'Audiobooks',
-    mediaType: 'book',
-    settings: { coverAspectRatio: 1 }
-  }
-  const authPayload = {
-    user: {
-      id: 'user-1',
-      username: 'kenny',
-      accessToken: 'access-token',
-      refreshToken: 'refresh-token',
-      librariesAccessible: ['lib-1'],
-      mediaProgress: [],
-      bookmarks: [],
-      permissions: {}
-    },
-    userDefaultLibraryId: 'lib-1',
-    serverSettings: { version: '2.26.0', language: 'en-us' },
-    ereaderDevices: []
-  }
-
-  await page.route('**/login', async (route) => {
-    expect(route.request().headers()['x-return-tokens']).toBe('true')
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(authPayload) })
-  })
-
-  await page.route('**/api/**', async (route) => {
-    const url = new URL(route.request().url())
-    if (url.pathname === '/api/authorize') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ...authPayload,
-          user: {
-            ...authPayload.user,
-            accessToken: undefined,
-            refreshToken: undefined
-          }
-        })
-      })
-      return
-    }
-    if (url.pathname === '/api/libraries') {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ libraries: [library] }) })
-      return
-    }
-    if (url.pathname === '/api/libraries/lib-1' && url.searchParams.get('include') === 'filterdata') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          library,
-          filterdata: { authors: [], genres: [], narrators: [], series: [], tags: [], languages: [], progress: [] },
-          issues: 0,
-          numUserPlaylists: 0
-        })
-      })
-      return
-    }
-    if (url.pathname === '/api/libraries/lib-1/personalized') {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
-      return
-    }
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({}) })
-  })
-}
+const { SERVER, mockAudiobookshelf } = require('./mock-audiobookshelf')
 
 test.describe('Connect page', () => {
   test('renders the connect form with logo and GitHub link', async ({ page }) => {
     await page.goto('/#/connect')
 
     await expect(page.getByRole('heading', { name: 'Bigbookshelf' })).toBeVisible()
-    await expect(page.locator('.bb-connect-logo svg')).toBeVisible()
+    await expect(page.locator('.bb-connect-logo')).toBeVisible()
 
     const githubLinks = page.locator('a[href*="github.com"]')
     const count = await githubLinks.count()

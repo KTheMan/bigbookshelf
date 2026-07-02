@@ -5,7 +5,7 @@ test.describe('TV layout and design language', () => {
     await page.goto('/#/connect')
     // Blank layout has no appbar - page should show the Figma login mark directly.
     await expect(page.locator('#appbar')).toHaveCount(0)
-    await expect(page.locator('.bb-connect-logo svg')).toBeVisible()
+    await expect(page.locator('.bb-connect-logo')).toBeVisible()
   })
 
   test('main layout has correct background color (audiobookshelf dark theme)', async ({ page }) => {

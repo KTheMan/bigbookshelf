@@ -5,6 +5,16 @@ class AbsDatabaseWeb extends WebPlugin {
     super()
   }
 
+  readJson(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key)
+      return raw ? JSON.parse(raw) : fallback
+    } catch (error) {
+      console.error(`[AbsDatabase] Failed to parse ${key}`, error)
+      return fallback
+    }
+  }
+
   async getDeviceData() {
     var dd = localStorage.getItem('device')
     if (dd) {
@@ -93,37 +103,43 @@ class AbsDatabaseWeb extends WebPlugin {
   }
 
   async getLocalFolders() {
-    return {
-      value: []
-    }
+    return { value: this.readJson('localFolders', []) }
   }
 
   async getLocalFolder({ folderId }) {
-    return null
+    const folders = this.readJson('localFolders', [])
+    return folders.find((folder) => folder.id === folderId) || null
   }
 
-  async getLocalLibraryItems(payload) {
-    return {
-      value: []
-    }
+  async getLocalLibraryItems({ mediaType } = {}) {
+    const items = this.readJson('localLibraryItems', [])
+    return { value: mediaType ? items.filter((item) => item.mediaType === mediaType) : items }
   }
 
   async getLocalLibraryItemsInFolder({ folderId }) {
-    return this.getLocalLibraryItems()
+    const items = this.readJson('localLibraryItems', []).filter((item) => item.folderId === folderId)
+    return { value: items }
   }
 
   async getLocalLibraryItem({ id }) {
-    return null
+    const items = this.readJson('localLibraryItems', [])
+    return items.find((item) => item.id === id) || null
   }
 
   async getLocalLibraryItemByLId({ libraryItemId }) {
-    return null
+    const items = this.readJson('localLibraryItems', [])
+    return items.find((item) => item.libraryItemId === libraryItemId) || null
   }
 
   async getAllLocalMediaProgress() {
-    return {
-      value: []
-    }
+    return { value: this.readJson('localMediaProgress', []) }
+  }
+
+  async getLocalMediaProgressForServerItem({ libraryItemId, episodeId }) {
+    const progresses = this.readJson('localMediaProgress', [])
+    return progresses.find((progress) => {
+      return progress.libraryItemId === libraryItemId && (progress.episodeId || null) === (episodeId || null)
+    }) || null
   }
 
   async removeLocalMediaProgress({ localMediaProgressId }) {
@@ -155,6 +171,10 @@ class AbsDatabaseWeb extends WebPlugin {
 
   async getMediaItemHistory({ mediaId }) {
     console.log('Get media item history', mediaId)
+    const histories = this.readJson('mediaItemHistory', {})
+    if (histories[mediaId]) {
+      return histories[mediaId]
+    }
     return {
       id: mediaId,
       mediaDisplayTitle: '',

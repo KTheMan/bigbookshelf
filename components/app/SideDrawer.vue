@@ -8,11 +8,6 @@
       :aria-hidden="!show"
       aria-label="Primary navigation"
     >
-      <div class="bb-tv-sidebar-header">
-        <p class="bb-tv-sidebar-welcome">Welcome, {{ displayName }}</p>
-        <p class="bb-tv-sidebar-email">{{ displayEmail }}</p>
-      </div>
-
       <div class="bb-tv-sidebar-items">
         <template v-for="item in navItems">
           <button
@@ -61,41 +56,14 @@ export default {
         this.$store.commit('setShowSideDrawer', val)
       }
     },
-    user() {
-      return this.$store.state.user.user
-    },
     serverConnectionConfig() {
       return this.$store.state.user.serverConnectionConfig
     },
     serverVersion() {
       return this.$store.state.serverSettings?.version || this.serverConnectionConfig?.version || ''
     },
-    displayName() {
-      return this.user?.username || this.user?.name || this.serverConnectionConfig?.username || 'Guest'
-    },
-    displayEmail() {
-      return this.user?.email || this.serverConnectionConfig?.address || 'Not connected'
-    },
-    userIsAdminOrUp() {
-      return this.$store.getters['user/getIsAdminOrUp']
-    },
-    currentLibrary() {
-      return this.$store.getters['libraries/getCurrentLibrary']
-    },
-    currentLibraryIcon() {
-      return this.currentLibrary?.icon || 'database'
-    },
-    currentLibraryMediaType() {
-      return this.$store.getters['libraries/getCurrentLibraryMediaType']
-    },
-    isPodcast() {
-      return this.currentLibraryMediaType === 'podcast'
-    },
-    userHasPlaylists() {
-      return this.$store.state.libraries.numUserPlaylists
-    },
     navItems() {
-      let items = []
+      const items = []
 
       if (!this.serverConnectionConfig) {
         items.push({
@@ -106,71 +74,10 @@ export default {
       }
 
       items.push({
-        iconPack: 'abs-icons',
         icon: 'home',
         text: this.$strings.ButtonHome,
         to: '/bookshelf',
         exact: true
-      })
-
-      if (this.isPodcast) {
-        items.push({
-          iconPack: 'abs-icons',
-          icon: 'list',
-          text: this.$strings.ButtonLatest,
-          to: '/bookshelf/latest'
-        })
-        items.push({
-          iconPack: 'abs-icons',
-          icon: this.currentLibraryIcon,
-          text: this.$strings.ButtonLibrary,
-          to: '/bookshelf/library'
-        })
-        if (this.userIsAdminOrUp) {
-          items.push({
-            icon: 'podcasts',
-            text: this.$strings.ButtonAdd,
-            to: '/bookshelf/add-podcast'
-          })
-        }
-      } else {
-        items.push({
-          iconPack: 'abs-icons',
-          icon: this.currentLibraryIcon,
-          text: this.$strings.ButtonLibrary,
-          to: '/bookshelf/library'
-        })
-        items.push({
-          iconPack: 'abs-icons',
-          icon: 'columns',
-          text: this.$strings.ButtonSeries,
-          to: '/bookshelf/series'
-        })
-        items.push({
-          icon: 'collections_bookmark',
-          text: this.$strings.ButtonCollections,
-          to: '/bookshelf/collections'
-        })
-        items.push({
-          iconPack: 'abs-icons',
-          icon: 'authors',
-          text: this.$strings.ButtonAuthors,
-          to: '/bookshelf/authors'
-        })
-      }
-
-      if (this.userHasPlaylists) {
-        items.push({
-          icon: 'queue_music',
-          text: this.$strings.ButtonPlaylists,
-          to: '/bookshelf/playlists'
-        })
-      }
-
-      items.push({
-        icon: 'search',
-        text: this.$strings.ButtonSearch || 'Search',
-        to: '/search'
       })
 
       if (this.serverConnectionConfig) {
@@ -206,7 +113,7 @@ export default {
         })
         items.push({
           icon: 'logout',
-          text: this.$strings.ButtonDisconnect || 'Sign Out',
+          text: 'Sign Out',
           action: 'disconnect'
         })
       }
@@ -264,25 +171,25 @@ export default {
 
 .bb-tv-sidebar-scrim {
   position: absolute;
-  top: 0;
+  top: 64px;
   right: 0;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 64px);
   background: rgba(0, 0, 0, 0.7);
-  z-index: 55;
+  z-index: 45;
   cursor: pointer;
 }
 
 .bb-tv-sidebar {
   position: absolute;
-  top: 0;
+  top: 64px;
   right: 0;
   bottom: 0;
   width: 384px;
   background: #383838;
-  z-index: 60;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -293,34 +200,6 @@ export default {
 .bb-tv-sidebar-expanded {
   transform: translateX(0);
   box-shadow: -22px 0 70px rgba(0, 0, 0, 0.36);
-}
-
-.bb-tv-sidebar-header {
-  height: 100px;
-  width: 100%;
-  padding: 25px 32px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  flex-shrink: 0;
-}
-
-.bb-tv-sidebar-welcome {
-  color: #ffffff;
-  font-size: 18px;
-  line-height: 23px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bb-tv-sidebar-email {
-  margin-top: 6px;
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 12px;
-  line-height: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .bb-tv-sidebar-brand {
@@ -358,7 +237,7 @@ export default {
 .bb-tv-sidebar-items {
   flex: 1;
   overflow-y: auto;
-  padding: 0;
+  padding: 24px 0 0;
 }
 
 .bb-tv-sidebar-item,
@@ -367,7 +246,7 @@ export default {
   height: 52px;
   display: flex;
   align-items: center;
-  color: rgba(255, 255, 255, 0.68);
+  color: #e6edf3;
   text-decoration: none;
   cursor: pointer;
   outline: none;
@@ -380,16 +259,16 @@ export default {
 .bb-tv-sidebar-item .material-symbols,
 .bb-tv-sidebar-item .abs-icons,
 .bb-tv-sidebar-disconnect .material-symbols {
-  width: 36px;
-  min-width: 36px;
+  width: 24px;
+  min-width: 24px;
   text-align: left;
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .bb-tv-sidebar-label {
-  margin-left: 4px;
-  font-size: 16px;
+  margin-left: 16px;
+  font-size: 15px;
   line-height: 19px;
   font-weight: 600;
   opacity: 1;
@@ -400,7 +279,7 @@ export default {
 
 .bb-tv-sidebar-item-active {
   color: #1ad691;
-  background: rgba(26, 214, 145, 0.12);
+  background: rgba(26, 214, 145, 0.14);
 }
 
 .bb-tv-sidebar-item:focus,
@@ -424,9 +303,9 @@ export default {
 .bb-tv-sidebar-footer {
   height: 100px;
   padding: 16px 32px 0;
-  color: rgba(255, 255, 255, 0.48);
+  color: #a0a6ac;
   flex-shrink: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  background: #2f3030;
 }
 
 .bb-tv-sidebar-server,

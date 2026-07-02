@@ -6,7 +6,7 @@
         <span>Back</span>
       </button>
       <div v-else class="bb-tv-brand-mark">
-        <img src="Logo.png" alt="" />
+        <span class="bb-tv-brand-dot" aria-hidden="true" />
         <span>Bigbookshelf</span>
       </div>
     </div>
@@ -34,16 +34,16 @@
     </div>
 
     <div class="bb-tv-topbar-actions">
-      <button v-if="user && currentLibrary" type="button" aria-label="Change library" class="bb-tv-icon-btn" @click="clickShowLibraryModal">
-        <ui-library-icon :icon="currentLibraryIcon" :size="5" font-size="base" />
-      </button>
-
-      <nuxt-link v-if="user" class="bb-tv-icon-btn" to="/downloads" aria-label="Downloads">
-        <span class="material-symbols">download</span>
-      </nuxt-link>
-
       <nuxt-link v-if="user" class="bb-tv-icon-btn" to="/search" aria-label="Search">
         <span class="material-symbols">search</span>
+      </nuxt-link>
+
+      <button v-if="user" type="button" aria-label="Notifications" class="bb-tv-icon-btn" disabled>
+        <span class="material-symbols">notifications</span>
+      </button>
+
+      <nuxt-link v-if="user" class="bb-tv-icon-btn" to="/account" aria-label="Account">
+        <span class="material-symbols">person</span>
       </nuxt-link>
 
       <nuxt-link v-else class="bb-tv-icon-btn" to="/connect" aria-label="Connect">
@@ -173,11 +173,11 @@ export default {
   padding: 0 32px;
   background: #383838;
   position: relative;
-  z-index: 20;
+  z-index: 70;
 }
 
 .bb-tv-brand {
-  width: 284px;
+  width: 252px;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -189,16 +189,18 @@ export default {
   height: 36px;
 }
 
-.bb-tv-brand-mark img {
+.bb-tv-brand-dot {
+  display: block;
   width: 36px;
   height: 36px;
   border-radius: 18px;
+  background: #1ad691;
   flex-shrink: 0;
 }
 
 .bb-tv-brand-mark span {
   margin-left: 10px;
-  color: #ffffff;
+  color: #e6edf3;
   font-size: 18px;
   line-height: 25px;
   font-weight: 700;
@@ -236,10 +238,11 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 0 18px;
-  border-radius: 8px;
+  border-radius: 20px;
   border: 2px solid transparent;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 15px;
+  background: #2f3030;
+  color: #a0a6ac;
+  font-size: 16px;
   line-height: 20px;
   font-weight: 600;
   cursor: pointer;
@@ -253,7 +256,8 @@ export default {
 }
 
 .bb-tv-library-chip-active {
-  background: #232323;
+  background: #2f3030;
+  border-color: #1ad691;
   color: #1ad691;
 }
 
@@ -281,9 +285,9 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  color: #e6edf3;
+  background: #2f3030;
   border: 2px solid transparent;
   cursor: pointer;
   outline: none;
@@ -311,13 +315,19 @@ export default {
 }
 
 .bb-tv-icon-btn .material-symbols {
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1;
+}
+
+.bb-tv-icon-btn:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .bb-tv-icon-btn-primary {
   color: #111315;
   background: #1ad691;
+  width: 54px;
 }
 
 .bb-tv-back-btn {

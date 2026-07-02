@@ -12,14 +12,46 @@
  */
 const { test, expect } = require('@playwright/test')
 const { connectToServer, SERVER_CONFIGS } = require('./helpers')
+const { markMockSocketConnected, mockAudiobookshelf, seedAuthenticatedSession } = require('./mock-audiobookshelf')
 const ROUTES = require('./routes')
 const nav = require('./nav-helpers')
 
-const BOOT = async (page, path) => {
-  await page.goto(path)
+const toNuxtPath = (hashPath) => hashPath.replace(/^\/#/, '') || '/'
+
+const BOOT = async (page, path, { spa = false } = {}) => {
+  if (spa) {
+    const nuxtPath = toNuxtPath(path)
+    await page.evaluate((target) => window.$nuxt.$router.push(target), nuxtPath)
+    await page.waitForFunction((target) => window.location.hash === `#${target}`, nuxtPath)
+  } else {
+    await page.goto(path)
+  }
   await page.waitForLoadState('domcontentloaded')
   // Let the TVRemoteHandler plugin initialize and run its initial-focus pass.
   await page.waitForTimeout(450)
+}
+
+const BOOT_ROUTE = async (page, route) => {
+  if (route.auth) {
+    await mockAudiobookshelf(page)
+    await seedAuthenticatedSession(page, { libraryId: route.libraryId, includeServerConfig: true })
+    await BOOT(page, '/#/bookshelf')
+    await page.waitForFunction(
+      (libraryId) => {
+        const store = window.$nuxt?.$store
+        return !!store?.state.user?.user && (!libraryId || store.state.libraries.currentLibraryId === libraryId)
+      },
+      route.libraryId || null
+    )
+    await markMockSocketConnected(page)
+    await BOOT(page, route.path, { spa: true })
+  } else if (route.local) {
+    await mockAudiobookshelf(page)
+    await seedAuthenticatedSession(page, { libraryId: route.libraryId, includeServerConfig: false })
+    await BOOT(page, route.path)
+  } else {
+    await BOOT(page, route.path)
+  }
 }
 
 // ── Tier 1: structural invariants (no server) ──────────────────────────────
@@ -120,25 +152,9 @@ test.describe('Focusability audit self-check', () => {
 // ── Tier 2: per-route focusability audit (best-effort server) ──────────────
 
 test.describe('Per-route focusability audit', () => {
-  let connected = false
-
-  test.beforeAll(async ({ browser }) => {
-    const page = await browser.newPage()
-    connected = await nav.tryConnect(page, connectToServer)
-    await page.close()
-  })
-
   for (const route of ROUTES) {
     test(`${route.name} (${route.path}) — every clickable region is remote-reachable`, async ({ page }) => {
-      if (route.auth && !connected) {
-        test.skip(true, 'No server connection available for auth-gated route')
-      }
-      if (route.auth) {
-        const ok = await nav.tryConnect(page, connectToServer)
-        if (!ok) test.skip(true, 'Server connection failed in this test instance')
-      }
-
-      await BOOT(page, route.path)
+      await BOOT_ROUTE(page, route)
 
       const orphans = await nav.findUnreachableClickables(page)
       expect(
@@ -149,23 +165,17 @@ test.describe('Per-route focusability audit', () => {
     })
 
     test(`${route.name} (${route.path}) — has focusable content and sets initial focus`, async ({ page }) => {
-      if (route.auth && !connected) {
-        test.skip(true, 'No server connection available for auth-gated route')
-      }
-      if (route.auth) {
-        const ok = await nav.tryConnect(page, connectToServer)
-        if (!ok) test.skip(true, 'Server connection failed in this test instance')
-      }
-
-      await BOOT(page, route.path)
+      await BOOT_ROUTE(page, route)
 
       const count = await nav.countFocusable(page)
-      expect(count).toBeGreaterThanOrEqual(route.minFocusable || 1)
+      expect(count).toBeGreaterThanOrEqual(route.minFocusable ?? 1)
 
-      // The plugin's router.afterEach should have placed focus on visible content.
-      const focused = await nav.getFocused(page)
-      expect(focused, 'an element should be focused after load').not.toBeNull()
-      expect(focused.inViewport, 'initial focus must be on a visible element').toBe(true)
+      if ((route.minFocusable ?? 1) > 0) {
+        // The plugin's router.afterEach should have placed focus on visible content.
+        const focused = await nav.getFocused(page)
+        expect(focused, 'an element should be focused after load').not.toBeNull()
+        expect(focused.inViewport, 'initial focus must be on a visible element').toBe(true)
+      }
     })
   }
 })

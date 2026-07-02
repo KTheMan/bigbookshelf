@@ -3,13 +3,7 @@
     <div class="bb-connect-center">
       <!-- Brand -->
       <div class="bb-connect-brand">
-        <div class="bb-connect-logo">
-          <svg viewBox="0 0 64 64" width="120" height="120" aria-hidden="true">
-            <circle cx="32" cy="32" r="32" fill="#1AD691" />
-            <rect x="14" y="30" width="36" height="4" rx="2" fill="#232323" />
-            <rect x="30" y="14" width="4" height="36" rx="2" fill="#232323" />
-          </svg>
-        </div>
+        <div class="bb-connect-logo" aria-hidden="true" />
         <h1 class="bb-connect-title">Bigbookshelf</h1>
         <p class="bb-connect-subtitle">Self-hosted audiobook server for webOS TV</p>
       </div>
@@ -496,6 +490,8 @@ export default {
   width: 120px;
   height: 120px;
   flex: 0 0 120px;
+  border-radius: 50%;
+  background: #1ad691;
 }
 
 .bb-connect-title {
